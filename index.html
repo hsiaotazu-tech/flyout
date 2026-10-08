@@ -282,6 +282,15 @@ textarea{min-height:96px;resize:none;overflow:hidden;display:block}
 .acct[data-s=on] .sd{background:#3aa676}.acct[data-s=ro] .sd{background:#e0a030}.acct[data-s=err] .sd{background:var(--acc)}
 .mrow{display:flex;align-items:center;gap:8px;padding:8px 0}.mrow>div{flex:1;min-width:0}.mrow .tile{min-height:36px;flex:none;flex-direction:row;padding:6px 12px}
 .ro .addb,.ro .form,.ro .grip{display:none}
+/* v18: private lock screen */
+.lock{position:absolute;inset:0;z-index:30;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px;text-align:center}
+.lock[hidden]{display:none}
+.lock h1{font-size:28px;margin:14px 0 6px}
+.lock .sub{max-width:300px;line-height:1.5}
+.lock #lk-in{width:100%;max-width:320px;margin-top:18px}
+.lock #lk-in[hidden]{display:none}
+.lock .tile{flex-direction:row;gap:8px;min-height:48px;font-size:14px}
+.lock .in{margin-top:4px;font-size:13px}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 </style>
 </head>
@@ -329,6 +338,18 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
     <button aria-label="Itinerary"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
   </nav>
   <div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
+  <div class="lock" id="lock">
+    <div class="pl" id="lk-ic" style="width:64px;height:64px"></div>
+    <h1 class="serif">Trip Planner</h1>
+    <p class="sub" id="lk-msg">Opening your trip…</p>
+    <div id="lk-in" hidden>
+      <div class="tiles" style="--n:1"><button class="tile pri" id="lk-sign"><span>Sign in with Google</span></button></div>
+      <div class="lb">or paste a share link</div>
+      <input class="in" id="lk-link" placeholder="https://…#join=…" autocomplete="off" autocapitalize="off">
+      <div class="tiles" style="--n:1"><button class="tile" id="lk-join"><span>Join trip</span></button></div>
+      <p class="sub" id="lk-hint" hidden style="margin-top:14px;font-size:12px">An installed app keeps its own login. Sign in here, or paste the share link you were sent.</p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -620,6 +641,14 @@ function drawStatus(){
  RO=s.role==='viewer'&&s.mode==='cloud';
  document.body.classList.toggle('ro',RO);
  $('#acct').dataset.s=RO?'ro':s.error?'err':s.mode==='cloud'?'on':'off';
+ const locked=!!s.configured&&s.mode!=='cloud';
+ $('#lock').hidden=!locked;
+ ['#pager','#nav'].forEach(x=>{$(x).inert=locked});
+ if(locked){
+  $('#lk-in').hidden=!s.inited;
+  $('#lk-msg').textContent=!s.inited?'Opening your trip…':(s.error||'This trip is private. Sign in, or open the share link you were sent.');
+  $('#lk-hint').hidden=!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
+ }
  drawNotes();
 }
 $('#notes').addEventListener('focusout',()=>{if(!pendN)return;const p=pendN;pendN=null;if(JSON.stringify(notes)===pendBase){notes.splice(0,notes.length,...p);drawNotes();const s=window.__sync;s&&s.mark&&s.mark('notes',JSON.stringify(p))}});
@@ -673,6 +702,10 @@ $('#sheet').addEventListener('click',async e=>{
   else if(a==='back')openAccount();
  }catch(err){amsg(err.message||String(err))}
 });
+$('#lk-ic').innerHTML=PL(90);
+$('#lk-sign').onclick=async()=>{try{await window.__sync.signIn()}catch(e){$('#lk-msg').textContent=e.message||String(e)}};
+$('#lk-join').onclick=()=>{const m=$('#lk-link').value.match(/join=(\w+)\.(\w+)\.(editor|viewer)/);if(!m){$('#lk-msg').textContent='That does not look like a share link.';return}location.hash=m[0];location.reload()};
+setTimeout(()=>{const s=window.__sync;if(!s||!s.inited)$('#lk-msg').textContent='Still opening… check your connection, then reload.'},8000);
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 /* ---------- Bottom nav (only place that switches pages) ---------- */

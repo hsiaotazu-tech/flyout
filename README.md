@@ -31,10 +31,13 @@ GitHub Pages 放畫面、Firebase 放資料與登入、PWA 負責離線與安裝
 2. 登入後再點雲朵 → **Import** → 選 `my-trip-seed.json`,你的 Boston 行程就會進到雲端。
 3. 雲朵 → **Edit link** 產生連結傳給朋友。
 
-## 四、安裝到手機(PWA)
-- iPhone:用 Safari 開網站 → 分享 → **加入主畫面**。
-- Android:Chrome → 選單 → **安裝應用程式**。
-- 離線時可以開啟並編輯,恢復連線後會自動同步。
+## 四、安裝到手機(PWA)與登入
+- iPhone:用 Safari 開網站 → 分享 → **加入主畫面**。Android:Chrome → 選單 → **安裝應用程式**。
+- **沒登入、也沒有分享連結的人,打開網站只會看到鎖定畫面**,看不到任何行程。真正的保護是 Firestore 規則;畫面上的鎖定是讓沒權限的人不要看到空白範本。
+- **iPhone 的主畫面 app 和 Safari 的登入是分開的。** 第一次打開主畫面 app 會停在鎖定畫面:
+  - 朋友:把你傳給他的分享連結貼在「paste a share link」欄位,按 Join trip。
+  - 你自己:按 Sign in with Google。如果在主畫面 app 裡 Google 登入跳不出來,用變通辦法:在 Safari 登入後產生一條 **Edit link** 傳給自己(例如用 Notes 或訊息),貼到主畫面 app 的欄位加入,就能編輯。
+- 離線時可以開啟並編輯(登入過的裝置),恢復連線後會自動同步。
 
 ## 本機測試
 模組需要 http,不能直接雙擊 index.html。在資料夾裡執行 `python3 -m http.server 8000`,再開 http://localhost:8000。沒填 Firebase 設定時是「只存在這台裝置」模式。

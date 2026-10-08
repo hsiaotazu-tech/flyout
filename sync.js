@@ -103,7 +103,7 @@ async function init(){
   S.mode='local';S.role='owner';ctx=null;
   if(!ready)try{await localInit()}catch(_){ready=true}
  }
- A.status();
+ S.inited=true;A.status();
 }
 
 /* ---- sign-in and sharing (cloud only) ---- */
