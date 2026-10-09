@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Trip Planner</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#dfe7e2">
+<meta name="theme-color" content="#dfe7e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1d2926" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Trip">
@@ -291,6 +292,18 @@ textarea{min-height:96px;resize:none;overflow:hidden;display:block}
 .lock #lk-in[hidden]{display:none}
 .lock .tile{flex-direction:row;gap:8px;min-height:48px;font-size:14px}
 .lock .in{margin-top:4px;font-size:13px}
+/* v19: iPhone app polish, settings tab, rotate guard */
+html,body{background:var(--bg);-webkit-text-size-adjust:100%;touch-action:pan-x pan-y}
+@media(min-width:520px){html,body{background:var(--stage)}}
+input,select,textarea{font-size:16px!important}
+.phone{padding-bottom:0}
+.nav{margin-bottom:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px))}
+.nav button{position:relative}
+.nd{position:absolute;top:9px;left:calc(50% + 6px);width:8px;height:8px;border-radius:50%;background:var(--mute);border:2px solid var(--card);box-sizing:content-box}
+#nd[data-s=on]{background:#3aa676}#nd[data-s=ro]{background:#e0a030}#nd[data-s=err]{background:var(--acc)}
+#topfill{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60;pointer-events:none}
+#rot{display:none;position:fixed;inset:0;z-index:99;background:var(--bg);color:var(--ink);flex-direction:column;align-items:center;justify-content:center;gap:12px;font:500 15px 'DM Sans',sans-serif}
+@media (orientation:landscape) and (max-height:520px){#rot{display:flex}}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 </style>
 </head>
@@ -309,7 +322,7 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
     </section>
 
     <section class="page" id="overview">
-      <div class="hero"><button class="acct" id="acct" aria-label="Sync and share" data-s="off"></button>
+      <div class="hero">
         <div class="dr" id="dr"></div>
         <div class="mw">
           <svg class="map" id="map" viewBox="0 0 384 146" preserveAspectRatio="xMidYMid slice" aria-hidden="true"></svg>
@@ -330,12 +343,14 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
     </section>
 
     <section class="page" id="plan"><div class="rail" id="rail"></div><div class="dc" id="dc"></div></section>
+    <section class="page" id="settings"></section>
 
   </div>
   <nav class="nav" id="nav">
     <button aria-label="Checklist and notes"><svg viewBox="0 0 24 24"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h9"/></svg></button>
     <button class="on" aria-label="Overview"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
     <button aria-label="Itinerary"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
+    <button aria-label="Settings"><svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg><i class="nd" id="nd" data-s="off"></i></button>
   </nav>
   <div class="ov" id="ov"><div class="sheet" id="sheet"></div></div>
   <div class="lock" id="lock">
@@ -352,11 +367,13 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
   </div>
 </div>
 
+<div id="topfill"></div>
+<div id="rot"><div id="rot-ic"></div><p>Please rotate your phone to portrait.</p></div>
 <script>
 let RO=false;
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICO={trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',imgoff:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/><path d="M3 3l18 18"/>',pen:'<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',grip:'<path d="M5 7h14M5 12h14M5 17h14"/>',dots:'<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/>',fork:'<path d="M6 3v6a2 2 0 0 0 4 0V3M8 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 6.5V13H17"/>',sight:'<path d="M3 20h18M5 20V10M9.5 20V10M14.5 20V10M19 20V10M3 10l9-6 9 6z"/>',bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',spark:'<path d="M12 3l2 6 6 3-6 3-2 6-2-6-6-3 6-3z"/>',note:'<path d="M6 3.5h9l4 4V20.5H6z"/><path d="M14.5 3.5V8H19M9 12h7M9 16h7"/>',cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.9A6 6 0 0 1 18 9.6 4.2 4.2 0 0 1 17.5 18z"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/>',out:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',down:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',up:'<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>'};
+const ICO={trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',imgoff:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/><path d="M3 3l18 18"/>',pen:'<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',grip:'<path d="M5 7h14M5 12h14M5 17h14"/>',dots:'<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/>',fork:'<path d="M6 3v6a2 2 0 0 0 4 0V3M8 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 6.5V13H17"/>',sight:'<path d="M3 20h18M5 20V10M9.5 20V10M14.5 20V10M19 20V10M3 10l9-6 9 6z"/>',bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',spark:'<path d="M12 3l2 6 6 3-6 3-2 6-2-6-6-3 6-3z"/>',note:'<path d="M6 3.5h9l4 4V20.5H6z"/><path d="M14.5 3.5V8H19M9 12h7M9 16h7"/>',cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.9A6 6 0 0 1 18 9.6 4.2 4.2 0 0 1 17.5 18z"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/>',out:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',down:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',up:'<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>',phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>'};
 const ic=(n,z=18)=>`<svg class="ic" width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[n]||''}</svg>`;
 const PLANE='<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>';
 const CITY={TPE:'Taipei',ICN:'Seoul',BOS:'Boston',NRT:'Tokyo',KIX:'Osaka',LAX:'Los Angeles',JFK:'New York',SFO:'San Francisco',LHR:'London',BKK:'Bangkok',ORD:'Chicago',SZG:'Salzburg'};
@@ -458,7 +475,9 @@ $('#route').addEventListener('click',e=>{if(e.target.closest('.pl'))editTrip()})
 $('#route').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('.pl')){e.preventDefault();editTrip()}});
 
 /* ---------- Sheets ---------- */
-function rd(id,cb){const f=$('#'+id).files[0];if(!f)return cb('');const W=id==='i_f'?520:900,im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{const r=Math.min(1,W/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);cb(c.toDataURL('image/jpeg',.72))};im.onerror=()=>cb('');im.src=u}
+function rd(id,cb){const f=$('#'+id).files[0];if(!f)return cb('');
+ if(f.type==='image/gif'&&id==='e_f'){if(f.size>600*1024){alert('This GIF is too large ('+Math.round(f.size/1024)+' KB). Please use one under 600 KB, for example by shrinking it at ezgif.com.');return cb('')}const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f);return}
+ const W=id==='i_f'?520:900,im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{const r=Math.min(1,W/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);cb(c.toDataURL('image/jpeg',.72))};im.onerror=()=>cb('');im.src=u}
 function sheet(title,fields,onSave,onDel,dlab,extra){
  const acts=[...(extra||[]),...(onDel?[{l:dlab||'Delete',fn:onDel,cf:1,ic:'trash'}]:[])],n=(fields.length?1:0)+acts.length;
  const ctl=f=>f.o?sel(f.id,f.o,f.v):f.file?`<label class="in pk" data-l="${f.l}">${f.l}<input type="file" accept="image/*" id="${f.id}" hidden></label>`:`<input class="in" id="${f.id}" value="${esc(f.v||'')}" placeholder="${f.p||''}">`;
@@ -589,7 +608,7 @@ function setAct(){
 $('#plan').addEventListener('scroll',setAct,{passive:true});
 function daySheet(i){
  const d=days[i];
- sheet('Day '+(i+1)+' · '+d.date,[{id:'e_a',l:'Area',v:d.area,p:'Where are you today?'},{id:'e_n',l:'Note',v:d.note,p:'Reminders for the day'},{id:'e_f',l:d.img?'Replace banner photo':'Banner photo',file:1}],g=>{
+ sheet('Day '+(i+1)+' · '+d.date,[{id:'e_a',l:'Area',v:d.area,p:'Where are you today?'},{id:'e_n',l:'Note',v:d.note,p:'Reminders for the day'},{id:'e_f',l:d.img?'Replace photo or GIF':'Photo or GIF',file:1}],g=>{
   const a=g('e_a').trim(),n=g('e_n').trim();
   rd('e_f',img=>{d.area=a;d.note=n;if(img)d.img=img;drawPlan()});
  },d.img?()=>{d.img='';drawPlan()}:null,'Remove banner photo');
@@ -640,7 +659,7 @@ function drawStatus(){
  const s=window.__sync||{};
  RO=s.role==='viewer'&&s.mode==='cloud';
  document.body.classList.toggle('ro',RO);
- $('#acct').dataset.s=RO?'ro':s.error?'err':s.mode==='cloud'?'on':'off';
+ $('#nd').dataset.s=RO?'ro':s.error?'err':s.mode==='cloud'?'on':'off';
  const locked=!!s.configured&&s.mode!=='cloud';
  $('#lock').hidden=!locked;
  ['#pager','#nav'].forEach(x=>{$(x).inert=locked});
@@ -649,60 +668,70 @@ function drawStatus(){
   $('#lk-msg').textContent=!s.inited?'Opening your trip…':(s.error||'This trip is private. Sign in, or open the share link you were sent.');
   $('#lk-hint').hidden=!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
  }
- drawNotes();
+ drawNotes();drawSettings();
 }
 $('#notes').addEventListener('focusout',()=>{if(!pendN)return;const p=pendN;pendN=null;if(JSON.stringify(notes)===pendBase){notes.splice(0,notes.length,...p);drawNotes();const s=window.__sync;s&&s.mark&&s.mark('notes',JSON.stringify(p))}});
 
-/* ---------- Account / sync sheet ---------- */
-$('#acct').innerHTML=ic('cloud',18)+'<i class="sd"></i>';
-$('#acct').onclick=()=>openAccount();
+/* ---------- Settings page (sync, sharing, backup) ---------- */
 const tl=(a,i,l,c)=>`<button class="tile ${c?'dng':''}" data-act="${a}"><i>${ic(i)}</i><span>${l}</span></button>`;
 const mrow=(l,b)=>`<div class="mrow"><div>${l}</div>${b.map(x=>`<button class="tile ${x[3]?'dng':''}" data-act="${x[0]}" data-v="${esc(x[1])}"><span>${x[2]}</span></button>`).join('')}</div>`;
 const amsg=t=>{const m=$('#acm');if(m)m.textContent=t};
-const HEAD=t=>`<div class="serif" style="font-size:21px;text-align:center;font-weight:700">${t}</div>`;
-function openAccount(){
- const s=window.__sync;let st,tiles;
- if(!s){st='Sync is still loading…';tiles=[tl('export','down','Export'),tl('import','up','Import')]}
+const card=(t,h)=>`<div class="lb" style="text-align:left;margin:22px 0 8px">${t}</div><div class="card">${h}</div>`;
+function drawSettings(){
+ const el=$('#settings'),s=window.__sync;if(!el)return;
+ let st,acct='',share='',people='';
+ if(!s)st='Sync is still loading…';
  else if(s.mode==='cloud'){
   const own=s.role==='owner';
   st=own?'Signed in as '+(s.email||'owner')+'. Changes sync automatically.':'You joined this trip as '+(s.role==='editor'?'an editor':'a viewer')+'.';
-  tiles=own?[tl('edit','link','Edit link'),tl('view','link','View link'),tl('list','user','Links & people'),tl('export','down','Export'),tl('import','up','Import'),tl('signout','out','Sign out')]:[tl('export','down','Export'),tl('leave','out','Leave trip',1)];
+  acct=`<div class="tiles" style="--n:1">${own?tl('signout','out','Sign out'):tl('leave','out','Leave trip',1)}</div>`;
+  if(own){
+   share=card('Share this trip',`<p class="sub" style="margin:0 0 10px">Anyone with a link can open this trip without signing in.</p><div class="tiles" style="--n:2;margin-top:0">${tl('edit','link','Edit link')}${tl('view','link','View link')}</div><div id="alk"></div>`);
+   people=card('Links &amp; people','<div id="slist"><p class="empty">Loading…</p></div>');
+  }
  }else{
-  st=s.configured?'Saved on this device only. Sign in to back up and share this trip.':'Saved on this device only. Add your Firebase settings to turn on sync (see README).';
-  tiles=[...(s.configured?[tl('signin','user','Sign in')]:[]),tl('export','down','Export'),tl('import','up','Import')];
+  st='Saved on this device only.'+(s.configured?' Sign in to back up and share this trip.':' Add your Firebase settings to turn on sync (see README).');
+  if(s.configured)acct=`<div class="tiles" style="--n:1">${tl('signin','user','Sign in')}</div>`;
  }
  if(s&&s.error)st=s.error+' '+st;
- open(HEAD('Sync &amp; share')+`<p class="sub" id="acm" style="text-align:center;margin:8px 0 2px">${esc(st)}</p><div class="tiles" style="--n:3">${tiles.join('')}</div><div id="alk"></div>`,1);
+ const canImport=!s||s.mode!=='cloud'||s.role==='owner';
+ el.innerHTML=`<h1 class="serif" style="font-size:26px;margin:18px 0 0">Settings</h1>`+card('Account',`<p class="sub" id="acm" style="margin:0 0 12px">${esc(st)}</p>${acct}`)+share+people+card('Backup',`<div class="tiles" style="--n:2;margin-top:0">${tl('export','down','Export')}${canImport?tl('import','up','Import'):''}</div>`);
+ loadPeople();
 }
-async function acctList(){
- const s=window.__sync,[inv,mem]=await Promise.all([s.invites(),s.members()]);
- open(HEAD('Links &amp; people')+`<div class="lb">Share links</div>${inv.length?inv.map(i=>mrow('<b>'+(i.role==='editor'?'Can edit':'View only')+'</b><div class="sub">…'+i.id.slice(-4)+'</div>',[['copy',i.link,'Copy'],['rev',i.id,'Revoke',1]])).join(''):'<p class="empty">No active links.</p>'}<div class="lb">People</div>${mem.map(m=>mrow('<b>'+esc(m.name||'Guest')+'</b><div class="sub">'+m.role+'</div>',m.role==='owner'?[]:[['kick',m.uid,'Remove',1]])).join('')}<div id="alk"></div><p class="sub" id="acm" style="text-align:center;margin:6px 0"></p><div class="tiles" style="--n:1"><button class="tile" data-act="back"><span>Back</span></button></div>`,1);
+async function loadPeople(){
+ const s=window.__sync,box=$('#slist');
+ if(!box||!s||s.mode!=='cloud'||s.role!=='owner')return;
+ try{
+  const [inv,mem]=await Promise.all([s.invites(),s.members()]);
+  box.innerHTML=`<div class="lb" style="text-align:left;margin:0 0 4px">Share links</div>${inv.length?inv.map(i=>mrow('<b>'+(i.role==='editor'?'Can edit':'View only')+'</b><div class="sub">…'+i.id.slice(-4)+'</div>',[['copy',i.link,'Copy'],['rev',i.id,'Revoke',1]])).join(''):'<p class="empty" style="padding:4px 0">No active links.</p>'}<div class="lb" style="text-align:left;margin:14px 0 4px">People</div>${mem.map(m=>mrow('<b>'+esc(m.name||'Guest')+'</b><div class="sub">'+m.role+'</div>',m.role==='owner'?[]:[['kick',m.uid,'Remove',1]])).join('')}`;
+ }catch(e){box.innerHTML='<p class="empty">Could not load links.</p>'}
 }
 async function shareLink(l,edit){
- $('#alk').innerHTML=`<div class="lb">Link</div><input class="in" readonly id="lk" value="${esc(l)}" style="font-size:12px">`;
+ $('#alk').innerHTML=`<input class="in" readonly id="lk" value="${esc(l)}" style="margin-top:10px"><p class="sub" id="alm" style="margin:8px 0 0"></p>`;
  const k=$('#lk');k.focus();k.select();
  let ok=false;try{await navigator.clipboard.writeText(l);ok=true}catch(e){}
- amsg((ok?'Link copied.':'Press and hold the link to copy.')+(edit===true?' Anyone with it can edit this trip.':edit===false?' Anyone with it can view this trip.':''));
+ $('#alm').textContent=(ok?'Link copied.':'Press and hold the link to copy.')+(edit===true?' Anyone with it can edit this trip.':edit===false?' Anyone with it can view this trip.':'');
 }
-$('#sheet').addEventListener('click',async e=>{
+$('#settings').addEventListener('click',async e=>{
  const b=e.target.closest('[data-act]');if(!b)return;
  const a=b.dataset.act,v=b.dataset.v,s=window.__sync;
  const conf=()=>{if(b.dataset.c)return true;b.dataset.c=1;b.classList.add('arm');b.querySelector('span').textContent='Tap again';return false};
  if(a==='export'){const o={app:'trip-planner',v:1,data:Object.fromEntries(window.__app.keys().map(k=>[k,window.__app.get(k)]))};const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));l.download='trip-planner-backup.json';l.click();return}
- if(a==='import'){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const o=JSON.parse(await i.files[0].text());if(!o||!o.data||!o.data.trip)throw new Error('This is not a Trip Planner backup.');window.__app.apply(o.data);s&&s.rebase&&s.rebase();close()}catch(err){amsg(err.message)}};i.click();return}
+ if(a==='import'){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const o=JSON.parse(await i.files[0].text());if(!o||!o.data||!o.data.trip)throw new Error('This is not a Trip Planner backup.');window.__app.apply(o.data);s&&s.rebase&&s.rebase();amsg('Imported.')}catch(err){amsg(err.message)}};i.click();return}
+ if(a==='copy'){try{await navigator.clipboard.writeText(v);b.querySelector('span').textContent='Copied'}catch(err){await shareLink(v,null)}return}
  try{
   if(a==='signin')await s.signIn();
   else if(a==='signout')await s.signOut();
-  else if(a==='edit'||a==='view')await shareLink(await s.invite(a==='edit'?'editor':'viewer'),a==='edit');
-  else if(a==='list')await acctList();
-  else if(a==='copy')await shareLink(v,null);
-  else if(a==='rev'&&conf()){await s.revoke(v);await acctList()}
-  else if(a==='kick'&&conf()){await s.kick(v);await acctList()}
+  else if(a==='edit'||a==='view'){await shareLink(await s.invite(a==='edit'?'editor':'viewer'),a==='edit');loadPeople()}
+  else if(a==='rev'&&conf()){await s.revoke(v);await loadPeople()}
+  else if(a==='kick'&&conf()){await s.kick(v);await loadPeople()}
   else if(a==='leave'&&conf())await s.leave();
-  else if(a==='back')openAccount();
  }catch(err){amsg(err.message||String(err))}
 });
+drawSettings();
 $('#lk-ic').innerHTML=PL(90);
+$('#rot-ic').innerHTML=ic('phone',44);
+try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(e){}
 $('#lk-sign').onclick=async()=>{try{await window.__sync.signIn()}catch(e){$('#lk-msg').textContent=e.message||String(e)}};
 $('#lk-join').onclick=()=>{const m=$('#lk-link').value.match(/join=(\w+)\.(\w+)\.(editor|viewer)/);if(!m){$('#lk-msg').textContent='That does not look like a share link.';return}location.hash=m[0];location.reload()};
 setTimeout(()=>{const s=window.__sync;if(!s||!s.inited)$('#lk-msg').textContent='Still opening… check your connection, then reload.'},8000);
@@ -711,13 +740,14 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
 /* ---------- Bottom nav (only place that switches pages) ---------- */
 const pager=$('#pager'),navb=[...document.querySelectorAll('#nav button')],nav=$('#nav');
 let pi=1;
-const go=(i,b)=>{pi=Math.max(0,Math.min(2,i));pager.scrollTo({left:pi*pager.clientWidth,behavior:b||'smooth'});navb.forEach((x,j)=>x.classList.toggle('on',j===pi));if(pi===0)growAll()};
+const go=(i,b)=>{pi=Math.max(0,Math.min(3,i));pager.scrollTo({left:pi*pager.clientWidth,behavior:b||'smooth'});navb.forEach((x,j)=>x.classList.toggle('on',j===pi));if(pi===0)growAll();if(pi===3)drawSettings()};
 go(1,'instant');addEventListener('load',()=>go(pi,'instant'));addEventListener('resize',()=>go(pi,'instant'));
 navb.forEach((b,i)=>b.onclick=()=>go(i));
 let nx=null,sw=false;
+const navIdx=x=>{const r=nav.getBoundingClientRect();return Math.max(0,Math.min(navb.length-1,Math.floor((x-r.left)/r.width*navb.length)))};
 nav.onpointerdown=e=>{nx=e.clientX;sw=false};
-nav.onpointerup=e=>{if(nx==null)return;const dx=e.clientX-nx;nx=null;if(Math.abs(dx)>40){sw=true;go(pi+(dx<0?1:-1))}};
-nav.onpointercancel=()=>{nx=null};
+nav.onpointermove=e=>{if(nx==null)return;if(Math.abs(e.clientX-nx)>8)sw=true;if(sw){const i=navIdx(e.clientX);if(i!==pi)go(i)}};
+nav.onpointerup=nav.onpointercancel=()=>{nx=null};
 nav.addEventListener('click',e=>{if(sw){e.stopPropagation();e.preventDefault();sw=false}},true);
 
 /* ---------- Day rail: swipe anywhere on it to scroll through days ---------- */
