@@ -56,6 +56,10 @@ service cloud.firestore {
           && exists(/databases/$(db)/documents/links/$(request.resource.data.token))
           && get(/databases/$(db)/documents/links/$(request.resource.data.token)).data.tid == t;
 
+        // a member can change their own display name (and nothing else about their membership)
+        allow update: if signedIn() && request.auth.uid == uid && isMember(t)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name']);
+
         allow delete: if isOwner(t) || (signedIn() && request.auth.uid == uid);
       }
     }

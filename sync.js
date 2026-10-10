@@ -46,11 +46,15 @@ async function localInit(){
  baseline();ready=true;
 }
 async function openTrip(u,tid){
- const m=await F.getDoc(F.doc(db,'trips',tid,'members',u.uid));   // throws if you are not a member
+ const mref=F.doc(db,'trips',tid,'members',u.uid),force=lsGet('forceServer');
+ if(force)lsSet('forceServer','');
+ const m=await (force?F.getDoc(mref):fast(mref));   // throws if you are not a member
  if(!m.exists())throw new Error('not a member');
  ctx={tid,uid:u.uid};S.tid=tid;S.role=m.data().role;S.mode='cloud';S.email=u.email||'';S.pending='';
  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
  try{localStorage.setItem('trip',tid)}catch(e){}
+ let out=false;const kicked=()=>{if(out)return;out=true;lsSet('forceServer','1');lsSet('trip','');location.reload()};
+ F.getDoc(mref).then(r=>{if(!r.exists())kicked()}).catch(e=>{if(e&&e.code==='permission-denied')kicked()});   // access removed since the saved copy was made
  F.setDoc(F.doc(db,'users',u.uid),{tripId:tid},{merge:true}).catch(()=>{});
  await new Promise(res=>{
   let first=true;
@@ -67,6 +71,7 @@ async function openTrip(u,tid){
   },e=>{console.warn(e);done()});
  });
 }
+const fast=async ref=>{try{const c=await F.getDocFromCache(ref);if(c.exists())return c}catch(e){}return F.getDoc(ref)};   // saved copy first, the server only if there is none
 const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
 const ALPHA='23456789ABCDEFGHJKLMNPQRSTUVWXYZ',LINK_LEN=10;     // 32 symbols, no 0/O/1/I: about 50 bits, not guessable
 const mkToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(LINK_LEN)),b=>ALPHA[b%32]).join('');
@@ -80,7 +85,7 @@ async function createTrip(uid,name,dataMap){
  const cur=await F.getDoc(F.doc(db,'users',uid)),keep=tripIds(cur.exists()?cur.data():{});      // trips you already have stay in the list
  const tid=rnd(),b1=F.writeBatch(db);
  b1.set(F.doc(db,'trips',tid),{owner:uid,name,createdAt:F.serverTimestamp()});
- b1.set(F.doc(db,'trips',tid,'members',uid),{role:'owner',name:(auth.currentUser&&auth.currentUser.displayName)||'',joinedAt:F.serverTimestamp()});
+ b1.set(F.doc(db,'trips',tid,'members',uid),{role:'owner',name:(cur.exists()&&cur.data().name)||(auth.currentUser&&auth.currentUser.displayName)||'',joinedAt:F.serverTimestamp()});
  b1.set(F.doc(db,'users',uid),{tripId:tid,trips:[...new Set([...keep,tid])]},{merge:true});
  await b1.commit();
  const rows=Object.entries(dataMap);
@@ -107,12 +112,12 @@ async function cloudInit(){
  AU=au;F=fs;
  const app=initializeApp(CONFIG);auth=au.getAuth(app);
  db=fs.initializeFirestore(app,{localCache:fs.persistentLocalCache({tabManager:fs.persistentMultipleTabManager()}),experimentalAutoDetectLongPolling:true});   // more reliable on some phone networks
- try{await au.getRedirectResult(auth)}catch(e){console.warn(e)}
+ if(lsGet('authRedirect')){lsSet('authRedirect','');try{await au.getRedirectResult(auth)}catch(e){console.warn(e)}}   // only after a redirect sign-in; it is slow
  let u=await new Promise(r=>{const off=au.onAuthStateChanged(auth,x=>{off();r(x)})});
  if(!u)return localInit();
  // a guest who already joined one trip taps another trip's link: join it with the same name
  if(S.pending&&u.isAnonymous&&lsGet('guestName')){try{await joinWith(u,lsGet('guestName'),S.pending)}catch(e){console.warn(e)}}
- const uref=fs.doc(db,'users',u.uid),ud=await fs.getDoc(uref),data=ud.exists()?ud.data():{};
+ const uref=fs.doc(db,'users',u.uid),ud=await fast(uref),data=ud.exists()?ud.data():{};
  let ids=tripIds(data);const want=lsGet('trip');
  if(!ids.length&&!u.isAnonymous){ids=await ownedIds(u.uid);if(ids.length)fs.setDoc(uref,{trips:ids,tripId:ids[0]},{merge:true}).catch(()=>{})}   // never start a second trip when one already exists
  const first=want&&(ids.includes(want)||want===data.tripId)?want:(data.tripId||ids[0]);
@@ -151,10 +156,10 @@ S.signIn=async()=>{need();const p=new AU.GoogleAuthProvider();
  try{await AU.signInWithPopup(auth,p)}
  catch(e){
   if(e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')return;
-  if(/popup|not-supported/.test(e.code||'')){await AU.signInWithRedirect(auth,p);return}
+  if(/popup|not-supported/.test(e.code||'')){lsSet('authRedirect','1');await AU.signInWithRedirect(auth,p);return}
   throw e}
  location.reload()};
-S.signOut=async()=>{need();await AU.signOut(auth);location.reload()};
+S.signOut=async()=>{need();await AU.signOut(auth);lsSet('tripsCache','');lsSet('peopleCache','');location.reload()};
 const revokeTok=async(tid,t)=>{await F.deleteDoc(F.doc(db,'links',t)).catch(()=>{});await F.deleteDoc(F.doc(db,'trips',tid,'invites',t))};
 S.newLink=async(tid=ctx.tid)=>{
  need();
@@ -200,6 +205,7 @@ S.myTrips=async()=>{
  return out;
 };
 S.cachedTrips=()=>{try{return JSON.parse(localStorage.getItem('tripsCache')||'null')}catch(e){return null}};
+S.renameMe=async name=>{need();const n=String(name).trim().slice(0,30);await F.setDoc(F.doc(db,'trips',ctx.tid,'members',ctx.uid),{name:n},{merge:true});await F.setDoc(F.doc(db,'users',ctx.uid),{name:n},{merge:true})};   // the owner's display name
 S.renameTrip=async(tid,name)=>{need();await F.setDoc(F.doc(db,'trips',tid),{title:name},{merge:true})};   // the list name only; the destination on the overview is untouched
 S.switchTrip=tid=>{lsSet('trip',tid);location.reload()};
 S.newTrip=async()=>{

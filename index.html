@@ -347,6 +347,8 @@ input,select,textarea{font-size:16px!important}
 .sheet.sm{width:min(290px,100%);padding:10px 12px;border-radius:22px}
 .sheet.sm .rn .in{padding:8px 12px}
 .sheet.sm .rn .tile{min-width:64px;padding:0 12px;border-radius:14px}
+/* v26 */
+.pen{vertical-align:-2px}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 </style>
 </head>
@@ -412,6 +414,7 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
 </div>
 
 <datalist id="airlines"></datalist>
+<datalist id="airports"></datalist>
 <div id="topfill"></div>
 <div id="rot"><div id="rot-ic"></div><p>Please rotate your phone to portrait.</p></div>
 <script>
@@ -419,10 +422,13 @@ let RO=false;
 let LANG=(()=>{try{return localStorage.getItem('lang')}catch(e){return null}})()||((navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICO={trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',imgoff:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/><path d="M3 3l18 18"/>',pen:'<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',grip:'<path d="M5 7h14M5 12h14M5 17h14"/>',dots:'<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/>',fork:'<path d="M6 3v6a2 2 0 0 0 4 0V3M8 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 6.5V13H17"/>',sight:'<path d="M3 20h18M5 20V10M9.5 20V10M14.5 20V10M19 20V10M3 10l9-6 9 6z"/>',bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',spark:'<path d="M12 3l2 6 6 3-6 3-2 6-2-6-6-3 6-3z"/>',note:'<path d="M6 3.5h9l4 4V20.5H6z"/><path d="M14.5 3.5V8H19M9 12h7M9 16h7"/>',cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.9A6 6 0 0 1 18 9.6 4.2 4.2 0 0 1 17.5 18z"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/>',out:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',down:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',up:'<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>',phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',key:'<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5L20 3M16 7l3 3"/>'};
+const ICO={trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',imgoff:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/><path d="M3 3l18 18"/>',pen:'<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',grip:'<path d="M5 7h14M5 12h14M5 17h14"/>',dots:'<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/>',fork:'<path d="M6 3v6a2 2 0 0 0 4 0V3M8 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 6.5V13H17"/>',sight:'<path d="M3 20h18M5 20V10M9.5 20V10M14.5 20V10M19 20V10M3 10l9-6 9 6z"/>',bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',spark:'<path d="M12 3l2 6 6 3-6 3-2 6-2-6-6-3 6-3z"/>',note:'<path d="M6 3.5h9l4 4V20.5H6z"/><path d="M14.5 3.5V8H19M9 12h7M9 16h7"/>',cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.9A6 6 0 0 1 18 9.6 4.2 4.2 0 0 1 17.5 18z"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/>',out:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',down:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',up:'<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>',phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',swap:'<path d="M7 7h12l-3-3M17 17H5l3 3"/>',key:'<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5L20 3M16 7l3 3"/>'};
 const ic=(n,z=18)=>`<svg class="ic" width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[n]||''}</svg>`;
 const PLANE='<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>';
-const CITY={TPE:'Taipei',ICN:'Seoul',BOS:'Boston',NRT:'Tokyo',KIX:'Osaka',LAX:'Los Angeles',JFK:'New York',SFO:'San Francisco',LHR:'London',BKK:'Bangkok',ORD:'Chicago',SZG:'Salzburg'};
+const AP="TPE|Taipei|台北|Taoyuan;TSA|Taipei|台北|Songshan;KHH|Kaohsiung|高雄|;RMQ|Taichung|台中|;TNN|Tainan|台南|;HUN|Hualien|花蓮|;TTT|Taitung|台東|;KNH|Kinmen|金門|;MZG|Penghu|澎湖|;NRT|Tokyo|東京|Narita;HND|Tokyo|東京|Haneda;KIX|Osaka|大阪|Kansai;ITM|Osaka|大阪|Itami;UKB|Kobe|神戶|;NGO|Nagoya|名古屋|;FUK|Fukuoka|福岡|;CTS|Sapporo|札幌|New Chitose;OKA|Okinawa|沖繩|Naha;ISG|Ishigaki|石垣島|;MMY|Miyako|宮古島|;KOJ|Kagoshima|鹿兒島|;HIJ|Hiroshima|廣島|;SDJ|Sendai|仙台|;KMJ|Kumamoto|熊本|;TAK|Takamatsu|高松|;MYJ|Matsuyama|松山(日本)|;NGS|Nagasaki|長崎|;OIT|Oita|大分|;AOJ|Aomori|青森|;HKD|Hakodate|函館|;KMQ|Komatsu|小松|;ICN|Seoul|首爾|Incheon;GMP|Seoul|首爾|Gimpo;PUS|Busan|釜山|;CJU|Jeju|濟州|;TAE|Daegu|大邱|;CJJ|Cheongju|清州|;KWJ|Gwangju|光州|;HKG|Hong Kong|香港|;MFM|Macau|澳門|;PEK|Beijing|北京|Capital;PKX|Beijing|北京|Daxing;PVG|Shanghai|上海|Pudong;SHA|Shanghai|上海|Hongqiao;CAN|Guangzhou|廣州|;SZX|Shenzhen|深圳|;CTU|Chengdu|成都|Shuangliu;TFU|Chengdu|成都|Tianfu;CKG|Chongqing|重慶|;XIY|Xi'an|西安|;HGH|Hangzhou|杭州|;NKG|Nanjing|南京|;WUH|Wuhan|武漢|;CSX|Changsha|長沙|;XMN|Xiamen|廈門|;FOC|Fuzhou|福州|;KMG|Kunming|昆明|;TAO|Qingdao|青島|;DLC|Dalian|大連|;SHE|Shenyang|瀋陽|;HRB|Harbin|哈爾濱|;TSN|Tianjin|天津|;CGO|Zhengzhou|鄭州|;URC|Urumqi|烏魯木齊|;HAK|Haikou|海口|;SYX|Sanya|三亞|;NNG|Nanning|南寧|;KWE|Guiyang|貴陽|;LHW|Lanzhou|蘭州|;TNA|Jinan|濟南|;HFE|Hefei|合肥|;NGB|Ningbo|寧波|;WNZ|Wenzhou|溫州|;LXA|Lhasa|拉薩|;BKK|Bangkok|曼谷|Suvarnabhumi;DMK|Bangkok|曼谷|Don Mueang;HKT|Phuket|普吉島|;CNX|Chiang Mai|清邁|;USM|Koh Samui|蘇美島|;KBV|Krabi|喀比|;SIN|Singapore|新加坡|;KUL|Kuala Lumpur|吉隆坡|;PEN|Penang|檳城|;BKI|Kota Kinabalu|亞庇|;KCH|Kuching|古晉|;LGK|Langkawi|蘭卡威|;CGK|Jakarta|雅加達|;DPS|Bali|峇里島|Denpasar;SUB|Surabaya|泗水|;YIA|Yogyakarta|日惹|;MNL|Manila|馬尼拉|;CEB|Cebu|宿霧|;DVO|Davao|納卯|;CRK|Clark|克拉克|;KLO|Boracay|長灘島|Kalibo;MPH|Boracay|長灘島|Caticlan;SGN|Ho Chi Minh City|胡志明市|;HAN|Hanoi|河內|;DAD|Da Nang|峴港|;CXR|Nha Trang|芽莊|Cam Ranh;PQC|Phu Quoc|富國島|;SAI|Siem Reap|暹粒|;PNH|Phnom Penh|金邊|;VTE|Vientiane|永珍|;LPQ|Luang Prabang|龍坡邦|;RGN|Yangon|仰光|;BWN|Bandar Seri Begawan|斯里巴加灣|;DEL|Delhi|德里|;BOM|Mumbai|孟買|;BLR|Bengaluru|班加羅爾|;MAA|Chennai|清奈|;CCU|Kolkata|加爾各答|;HYD|Hyderabad|海德拉巴|;CMB|Colombo|可倫坡|;MLE|Male|馬列|;KTM|Kathmandu|加德滿都|;DAC|Dhaka|達卡|;ISB|Islamabad|伊斯蘭瑪巴德|;KHI|Karachi|喀拉蚩|;LHE|Lahore|拉合爾|;DXB|Dubai|杜拜|;AUH|Abu Dhabi|阿布達比|;DOH|Doha|多哈|;BAH|Bahrain|巴林|;KWI|Kuwait|科威特|;MCT|Muscat|馬斯喀特|;RUH|Riyadh|利雅德|;JED|Jeddah|吉達|;AMM|Amman|安曼|;TLV|Tel Aviv|特拉維夫|;IST|Istanbul|伊斯坦堡|Istanbul Airport;SAW|Istanbul|伊斯坦堡|Sabiha Gokcen;AYT|Antalya|安塔利亞|;ADB|Izmir|伊茲密爾|;TBS|Tbilisi|提比里斯|;EVN|Yerevan|葉里溫|;GYD|Baku|巴庫|;ALA|Almaty|阿拉木圖|;TAS|Tashkent|塔什干|;UBN|Ulaanbaatar|烏蘭巴托|;LHR|London|倫敦|Heathrow;LGW|London|倫敦|Gatwick;STN|London|倫敦|Stansted;LTN|London|倫敦|Luton;MAN|Manchester|曼徹斯特|;EDI|Edinburgh|愛丁堡|;DUB|Dublin|都柏林|;CDG|Paris|巴黎|Charles de Gaulle;ORY|Paris|巴黎|Orly;NCE|Nice|尼斯|;LYS|Lyon|里昂|;MRS|Marseille|馬賽|;AMS|Amsterdam|阿姆斯特丹|;BRU|Brussels|布魯塞爾|;FRA|Frankfurt|法蘭克福|;MUC|Munich|慕尼黑|;BER|Berlin|柏林|;HAM|Hamburg|漢堡|;DUS|Dusseldorf|杜塞道夫|;CGN|Cologne|科隆|;STR|Stuttgart|斯圖加特|;ZRH|Zurich|蘇黎世|;GVA|Geneva|日內瓦|;VIE|Vienna|維也納|;SZG|Salzburg|薩爾茲堡|;INN|Innsbruck|因斯布魯克|;PRG|Prague|布拉格|;BUD|Budapest|布達佩斯|;WAW|Warsaw|華沙|;KRK|Krakow|克拉科夫|;CPH|Copenhagen|哥本哈根|;ARN|Stockholm|斯德哥爾摩|;OSL|Oslo|奧斯陸|;HEL|Helsinki|赫爾辛基|;KEF|Reykjavik|雷克雅維克|;MAD|Madrid|馬德里|;BCN|Barcelona|巴塞隆納|;AGP|Malaga|馬拉加|;PMI|Palma de Mallorca|帕爾馬|;LIS|Lisbon|里斯本|;OPO|Porto|波多|;FCO|Rome|羅馬|;MXP|Milan|米蘭|Malpensa;LIN|Milan|米蘭|Linate;VCE|Venice|威尼斯|;NAP|Naples|拿坡里|;FLR|Florence|佛羅倫斯|;ATH|Athens|雅典|;JTR|Santorini|聖托里尼|;HER|Heraklion|伊拉克里翁|;OTP|Bucharest|布加勒斯特|;SOF|Sofia|索非亞|;BEG|Belgrade|貝爾格勒|;ZAG|Zagreb|札格拉布|;DBV|Dubrovnik|杜布羅夫尼克|;SPU|Split|斯普利特|;MLA|Malta|馬爾他|;SVO|Moscow|莫斯科|Sheremetyevo;LED|St Petersburg|聖彼得堡|;JFK|New York|紐約|JFK;EWR|New York|紐約|Newark;LGA|New York|紐約|LaGuardia;BOS|Boston|波士頓|;PVD|Providence|普洛維頓斯|;MHT|Manchester NH|曼徹斯特(新罕布夏)|;PWM|Portland ME|波特蘭(緬因)|;BDL|Hartford|哈特福|;BTV|Burlington VT|伯靈頓(佛蒙特)|;ALB|Albany|奧爾巴尼|;BUF|Buffalo|水牛城|;PHL|Philadelphia|費城|;PIT|Pittsburgh|匹茲堡|;IAD|Washington DC|華盛頓|Dulles;DCA|Washington DC|華盛頓|Reagan;BWI|Baltimore|巴爾的摩|;ATL|Atlanta|亞特蘭大|;MIA|Miami|邁阿密|;FLL|Fort Lauderdale|勞德岱堡|;PBI|West Palm Beach|西棕櫚灘|;MCO|Orlando|奧蘭多|;TPA|Tampa|坦帕|;CLT|Charlotte|夏洛特|;RDU|Raleigh|羅里|;BNA|Nashville|納許維爾|;MSY|New Orleans|紐奧良|;ORD|Chicago|芝加哥|O'Hare;MDW|Chicago|芝加哥|Midway;DTW|Detroit|底特律|;CLE|Cleveland|克里夫蘭|;CVG|Cincinnati|辛辛那提|;IND|Indianapolis|印第安納波利斯|;MSP|Minneapolis|明尼阿波利斯|;STL|St. Louis|聖路易|;MCI|Kansas City|堪薩斯城|;DFW|Dallas|達拉斯|Fort Worth;IAH|Houston|休士頓|;AUS|Austin|奧斯汀|;SAT|San Antonio|聖安東尼奧|;DEN|Denver|丹佛|;SLC|Salt Lake City|鹽湖城|;PHX|Phoenix|鳳凰城|;LAS|Las Vegas|拉斯維加斯|;LAX|Los Angeles|洛杉磯|;SNA|Orange County|橘郡|;BUR|Burbank|柏班克|;ONT|Ontario CA|安大略(加州)|;SAN|San Diego|聖地牙哥|;SFO|San Francisco|舊金山|;SJC|San Jose CA|聖荷西(加州)|;OAK|Oakland|奧克蘭(美國)|;SMF|Sacramento|沙加緬度|;SEA|Seattle|西雅圖|;PDX|Portland OR|波特蘭(奧勒岡)|;ANC|Anchorage|安克拉治|;HNL|Honolulu|檀香山|;OGG|Maui|茂宜島|;GUM|Guam|關島|;SPN|Saipan|塞班|;SJU|San Juan|聖胡安|;YYZ|Toronto|多倫多|;YUL|Montreal|蒙特婁|;YVR|Vancouver|溫哥華|;YYC|Calgary|卡加利|;YOW|Ottawa|渥太華|;YQB|Quebec City|魁北克市|;YHZ|Halifax|哈利法克斯|;MEX|Mexico City|墨西哥城|;CUN|Cancun|坎昆|;GDL|Guadalajara|瓜達拉哈拉|;PUJ|Punta Cana|蓬塔卡納|;NAS|Nassau|拿索|;MBJ|Montego Bay|蒙特哥灣|;HAV|Havana|哈瓦那|;PTY|Panama City|巴拿馬城|;SJO|San Jose CR|聖荷西(哥斯大黎加)|;BOG|Bogota|波哥大|;MDE|Medellin|麥德林|;UIO|Quito|基多|;LIM|Lima|利馬|;CUZ|Cusco|庫斯科|;SCL|Santiago|聖地亞哥(智利)|;EZE|Buenos Aires|布宜諾斯艾利斯|;MVD|Montevideo|蒙特維多|;GRU|Sao Paulo|聖保羅|;GIG|Rio de Janeiro|里約熱內盧|;SYD|Sydney|雪梨|;MEL|Melbourne|墨爾本|;BNE|Brisbane|布里斯本|;PER|Perth|伯斯|;ADL|Adelaide|阿得雷德|;CNS|Cairns|凱恩斯|;OOL|Gold Coast|黃金海岸|;CBR|Canberra|坎培拉|;AKL|Auckland|奧克蘭(紐西蘭)|;CHC|Christchurch|基督城|;WLG|Wellington|威靈頓|;ZQN|Queenstown|皇后鎮|;NAN|Nadi|楠迪|;PPT|Tahiti|大溪地|;NOU|Noumea|努美亞|;JNB|Johannesburg|約翰尼斯堡|;CPT|Cape Town|開普敦|;CAI|Cairo|開羅|;ADD|Addis Ababa|阿迪斯阿貝巴|;NBO|Nairobi|奈洛比|;CMN|Casablanca|卡薩布蘭卡|;RAK|Marrakech|馬拉喀什|;LOS|Lagos|拉哥斯|;ACC|Accra|阿克拉|;DAR|Dar es Salaam|三蘭港|;MRU|Mauritius|模里西斯|;TUN|Tunis|突尼斯|;JRO|Kilimanjaro|吉力馬札羅|;ZNZ|Zanzibar|尚吉巴".split(";").map(x=>x.split("|"));
+const CITY=Object.fromEntries(AP.map(a=>[a[0],a[1]]));
+const apCode=v=>{const m=String(v||"").trim().match(/^[A-Za-z]{3}/);return m?m[0].toUpperCase():""};
+const apLabel=c=>c?c+(CITY[c]?" "+CITY[c]:""):"";
 const AIRZH=[["Korean Air","大韓航空"],["Asiana Airlines","韓亞航空"],["EVA Air","長榮航空"],["China Airlines","中華航空"],["STARLUX Airlines","星宇航空"],["Mandarin Airlines","華信航空"],["UNI Air","立榮航空"],["Cathay Pacific","國泰航空"],["Hong Kong Airlines","香港航空"],["Air Macau","澳門航空"],["Singapore Airlines","新加坡航空"],["Japan Airlines","日本航空"],["ANA (All Nippon Airways)","全日空"],["Thai Airways","泰國航空"],["Bangkok Airways","曼谷航空"],["Malaysia Airlines","馬來西亞航空"],["Garuda Indonesia","印尼鷹航"],["Philippine Airlines","菲律賓航空"],["Vietnam Airlines","越南航空"],["Air China","中國國際航空"],["China Eastern","中國東方航空"],["China Southern","中國南方航空"],["Hainan Airlines","海南航空"],["Xiamen Airlines","廈門航空"],["Air India","印度航空"],["Qantas","澳洲航空"],["Air New Zealand","紐西蘭航空"],["Fiji Airways","斐濟航空"],["Emirates","阿聯酋航空"],["Qatar Airways","卡達航空"],["Etihad Airways","阿提哈德航空"],["Turkish Airlines","土耳其航空"],["Saudia","沙烏地阿拉伯航空"],["El Al","以色列航空"],["Ethiopian Airlines","衣索比亞航空"],["South African Airways","南非航空"],["Kenya Airways","肯亞航空"],["EgyptAir","埃及航空"],["Royal Air Maroc","摩洛哥皇家航空"],["Lufthansa","漢莎航空"],["British Airways","英國航空"],["Air France","法國航空"],["KLM","荷蘭皇家航空"],["Finnair","芬蘭航空"],["SAS Scandinavian","北歐航空"],["Swiss","瑞士國際航空"],["Austrian Airlines","奧地利航空"],["Brussels Airlines","布魯塞爾航空"],["Iberia","西班牙國家航空"],["TAP Air Portugal","葡萄牙航空"],["ITA Airways","義大利航空"],["LOT Polish Airlines","波蘭航空"],["Aer Lingus","愛爾蘭航空"],["Virgin Atlantic","維珍航空"],["Icelandair","冰島航空"],["Aegean Airlines","愛琴海航空"],["Czech Airlines","捷克航空"],["Delta Air Lines","達美航空"],["United Airlines","聯合航空"],["American Airlines","美國航空"],["Alaska Airlines","阿拉斯加航空"],["Hawaiian Airlines","夏威夷航空"],["Air Canada","加拿大航空"],["Aeromexico","墨西哥航空"],["Copa Airlines","巴拿馬航空"],["Avianca","哥倫比亞航空"],["LATAM Airlines","南美航空"],["Tigerair Taiwan","台灣虎航"],["Scoot","酷航"],["Jetstar","捷星航空"],["AirAsia","亞洲航空"],["AirAsia X","亞洲航空X"],["Thai AirAsia","泰國亞洲航空"],["Thai Lion Air","泰國獅子航空"],["Lion Air","獅子航空"],["Batik Air","巴迪克航空"],["Cebu Pacific","宿霧太平洋航空"],["VietJet Air","越捷航空"],["Bamboo Airways","越竹航空"],["Peach","樂桃航空"],["ZIPAIR","ZIPAIR"],["Spring Japan","春秋航空日本"],["Spring Airlines","春秋航空"],["Jeju Air","濟州航空"],["Jin Air","真航空"],["T'way Air","德威航空"],["Air Busan","釜山航空"],["Air Seoul","首爾航空"],["Eastar Jet","易斯達航空"],["Air Premia","Air Premia"],["HK Express","香港快運"],["IndiGo","靛藍航空"],["SpiceJet","香料航空"],["Flydubai","杜拜航空"],["Air Arabia","阿拉伯航空"],["Ryanair","瑞安航空"],["easyJet","易捷航空"],["Wizz Air","威茲航空"],["Vueling","伏林航空"],["Eurowings","歐洲之翼"],["Transavia","川斯沃航空"],["Norwegian","挪威航空"],["Pegasus Airlines","飛馬航空"],["Southwest Airlines","西南航空"],["JetBlue","捷藍航空"],["Frontier Airlines","邊疆航空"],["Allegiant Air","艾利金特航空"],["WestJet","西捷航空"],["Flair Airlines","Flair Airlines"],["Volaris","Volaris"],["Viva Aerobus","Viva Aerobus"],["JetSMART","JetSMART"],["Sky Airline","Sky Airline"],["Norse Atlantic Airways","Norse Atlantic"]];
 const AIRMAP=Object.fromEntries(AIRZH.filter(a=>a[1]&&a[1]!==a[0]));
 const airL=n=>LANG==='zh'&&AIRMAP[n]?AIRMAP[n]:n;
@@ -486,14 +492,14 @@ let tab=0,draft;
 const fd=v=>{if(!v)return '—';const[y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})};
 const dtf=(id,type,v)=>`<label class="in dt"><span>${type==='date'?fd(v):v}</span><input type="${type}" id="${id}" value="${v}"></label>`;
 function tripForm(){
- const f=draft.f[tab],codes=Object.keys(CITY),x=tab>1;
+ const f=draft.f[tab],x=tab>1;
  const tabs=draft.f.map((l,i)=>`<button class="${i===tab?'on':''}" data-t="${i}">${i<2?['Departure','Return'][i]:'Flight '+(i+1)}</button>`).join('');
  open(`<div class="lb" style="margin-top:0">Destination</div><input class="in" id="d_dest" value="${esc(draft.dest)}">
  <div class="g2"><div><div class="lb">Start</div>${dtf('d_s','date',draft.start)}</div><div><div class="lb">End</div>${dtf('d_e','date',draft.end)}</div></div>
  <div class="seg">${tabs}</div>
  <div class="panel"><div class="g2">
  <div><div class="lb">Airline</div><input class="in" id="f_al" list="airlines" value="${esc(f.al==='Select'?'':f.al)}" placeholder="Search or type" autocomplete="off"></div><div><div class="lb">Code</div><input class="in" id="f_code" value="${esc(f.code)}"></div>
- <div><div class="lb">From</div>${sel('f_from',codes,f.from)}</div><div><div class="lb">To</div>${sel('f_to',codes,f.to)}</div>
+ <div><div class="lb">From</div><input class="in" id="f_from" list="airports" value="${esc(apLabel(f.from))}" placeholder="Search airport" autocomplete="off" autocapitalize="characters"></div><div><div class="lb">To</div><input class="in" id="f_to" list="airports" value="${esc(apLabel(f.to))}" placeholder="Search airport" autocomplete="off" autocapitalize="characters"></div>
  <div><div class="lb">Depart</div>${dtf('f_dep','time',f.dep)}</div><div><div class="lb">Arrive</div>${dtf('f_arr','time',f.arr)}</div>
  ${x?`<div><div class="lb">Direction</div>${sel('f_dir',['Departure','Return'],f.dir?'Return':'Departure')}</div><div><div class="lb">Departs</div>${sel('f_o',['Same day','+1 day'],f.o?'+1 day':'Same day')}</div>`:''}
  <div style="grid-column:1/-1"><div class="lb">Arrival day</div>${sel('f_p',['Same day','+1 day'],f.p?'+1 day':'Same day')}</div></div></div>
@@ -502,13 +508,13 @@ function tripForm(){
 function grab(){
  const f=draft.f[tab];
  draft.dest=$('#d_dest').value.trim()||'New Destination';draft.start=$('#d_s').value||draft.start;draft.end=$('#d_e').value||draft.end;
- f.al=$('#f_al').value;f.code=$('#f_code').value.trim();f.from=$('#f_from').value;f.to=$('#f_to').value;f.dep=$('#f_dep').value||f.dep;f.arr=$('#f_arr').value||f.arr;f.p=$('#f_p').value==='+1 day'?1:0;
+ f.al=$('#f_al').value;f.code=$('#f_code').value.trim();f.from=apCode($('#f_from').value)||f.from;f.to=apCode($('#f_to').value)||f.to;f.dep=$('#f_dep').value||f.dep;f.arr=$('#f_arr').value||f.arr;f.p=$('#f_p').value==='+1 day'?1:0;
  if(tab>1){f.dir=$('#f_dir').value==='Return'?1:0;f.o=$('#f_o').value==='+1 day'?1:0}
 }
 $('#sheet').onclick=e=>{
  const t=e.target.closest('[data-t]');
  if(t){grab();tab=+t.dataset.t;tripForm();return}
- if(e.target.closest('#d_add')){grab();const p=draft.f[tab];draft.f.push({al:p.al,code:'',from:p.to,to:'',dep:'12:00',arr:'14:00',p:0,dir:p.dir,o:0});tab=draft.f.length-1;tripForm();return}
+ if(e.target.closest('#d_add')){grab();const p=draft.f[tab];draft.f.push({al:p.al,code:'',from:p.to,to:p.from,dep:'12:00',arr:'14:00',p:0,dir:p.dir,o:0});tab=draft.f.length-1;tripForm();return}
  const rm=e.target.closest('#d_rm');
  if(rm){if(!rm.dataset.c){rm.dataset.c=1;rm.classList.add('arm');rm.querySelector('span').textContent='Tap again';return}grab();draft.f.splice(tab,1);tab=Math.max(0,tab-1);T.f=JSON.parse(JSON.stringify(draft.f));drawHero();tripForm();return}
  if(e.target.closest('#d_save')){grab();if(pd(draft.end)<pd(draft.start))draft.end=draft.start;Object.assign(T,draft);close();drawHero();relabel();drawPlan()}
@@ -738,60 +744,81 @@ function drawStatus(){
 }
 $('#notes').addEventListener('focusout',()=>{if(!pendN)return;const p=pendN;pendN=null;if(JSON.stringify(notes)===pendBase){notes.splice(0,notes.length,...p);drawNotes();const s=window.__sync;s&&s.mark&&s.mark('notes',JSON.stringify(p))}});
 
-/* ---------- Settings page (language, share link, people) ---------- */
-const tl=(a,i,l,c)=>`<button class="tile ${c?'dng':''}" data-act="${a}"><i>${ic(i)}</i><span>${l}</span></button>`;
-const mrow=(l,b)=>`<div class="mrow"><div>${l}</div>${b.map(x=>`<button class="tile dng" data-act="${x[0]}" data-v="${esc(x[1])}"><span>${x[2]}</span></button>`).join('')}</div>`;
+/* ---------- Settings page (my trips, people, language) ---------- */
+const mrow=(l,b)=>`<div class="mrow"><div>${l}</div>${b.map(x=>`<button class="tile ${x[3]||''}" data-act="${x[0]}" data-v="${esc(x[1])}"><span>${x[2]}</span></button>`).join('')}</div>`;
 const amsg=t=>{const m=$('#acm');if(m)m.textContent=t};
 const card=(t,h)=>`<div class="lb" style="text-align:left;margin:22px 0 8px">${t}</div><div class="card">${h}</div>`;
 const fmtD=(d,y)=>d.toLocaleDateString('en-US',y?{month:'short',day:'numeric',year:'numeric'}:{month:'short',day:'numeric'});
 const range=(a,b)=>{const x=pd(a),y=pd(b);return x.getFullYear()===y.getFullYear()?fmtD(x)+' – '+fmtD(y,1):fmtD(x,1)+' – '+fmtD(y,1)};
+const FRESH=20000;
+let TRIPS=null,PEOPLE=null,tripsAt=0,peopleAt=0,tripsBusy=false,tripsAgain=false,peopleBusy=false,creating=false,tsT=0,ts=null;
+try{TRIPS=JSON.parse(localStorage.getItem('tripsCache')||'null');PEOPLE=JSON.parse(localStorage.getItem('peopleCache')||'null')}catch(e){}
+const peopleFor=s=>PEOPLE&&s&&PEOPLE.tid===s.tid?PEOPLE.list:null;
+const isOwner=()=>{const s=window.__sync;return !!s&&s.mode==='cloud'&&s.role==='owner'};
 function drawSettings(){
  const el=$('#settings'),s=window.__sync;if(!el)return;
- let st,acct='',trips='',people='';
- if(!s)st='Sync is still loading…';
- else if(s.mode==='cloud'){
-  const own=s.role==='owner';
-  st=own?'Signed in as '+(s.email||'owner'):'You joined this trip as '+(s.role==='editor'?'an editor':'a viewer')+'.';
-  acct=`<div class="tiles" style="--n:1">${own?tl('signout','out','Sign out'):tl('leave','out','Leave trip',1)}</div>`;
-  if(own){
-   trips=`<div class="lb lbrow" style="text-align:left;margin:22px 0 8px"><span>My trips</span><button class="addb" data-act="newtrip" aria-label="New trip"${creating?' disabled':''}>${creating?'Creating…':'+ New'}</button></div><div class="card"><div id="tlist"><p class="empty">Loading…</p></div></div>`;
-   people=card('People','<div id="slist"><p class="empty">Loading…</p></div>');
-  }
- }else{
-  st='Saved on this device only.'+(s.configured?' Sign in to back up and share this trip.':' Add your Firebase settings to turn on sync (see README).');
-  if(s.configured)acct=`<div class="tiles" style="--n:1">${tl('signin','user','Sign in')}</div>`;
- }
- if(s&&s.error)st=s.error+' '+st;
- el.innerHTML=`<div class="trow"><h1 class="serif" style="font-size:26px">Settings</h1><div class="lgs" role="group" aria-label="Language"><button data-lang="en" class="${LANG==='en'?'on':''}">EN</button><button data-lang="zh" class="${LANG==='zh'?'on':''}">中文</button></div></div>`+card('Account',`<p class="sub" id="acm" style="margin:0 0 12px">${esc(st)}</p>${acct}`)+trips+people;
- loadTrips();loadPeople();
+ const own=isOwner();
+ const base=!s?'Sync is still loading…':s.mode!=='cloud'?'Saved on this device only.'+(s.configured?'':' Add your Firebase settings to turn on sync (see README).'):'';
+ const note=[(s&&s.error)||'',base].filter(Boolean).join(' ');
+ el.innerHTML=`<div class="trow"><h1 class="serif" style="font-size:26px">Settings</h1><div class="lgs" role="group" aria-label="Language"><button data-lang="en" class="${LANG==='en'?'on':''}">EN</button><button data-lang="zh" class="${LANG==='zh'?'on':''}">中文</button></div></div><p class="sub" id="acm" style="margin:8px 0 0">${esc(note)}</p>`
+  +(own?`<div class="lb lbrow" style="text-align:left;margin:22px 0 8px"><span>My trips</span><button class="addb" data-act="newtrip" aria-label="New trip"${creating?' disabled':''}>${creating?'Creating…':'+ New'}</button></div><div class="card"><div id="tlist"></div></div>`+card('People','<div id="slist"></div>'):'');
+ if(own){paintTrips(TRIPS?TRIPS.map(t=>({...t,current:t.tid===s.tid})):null);paintPeople(peopleFor(s));settingsShown()}
 }
-let tripsBusy=false,tripsAgain=false,creating=false;
+function settingsShown(){            // opening the tab never wipes what is on screen; it only refreshes quietly when the data is old
+ if(!isOwner())return;
+ if(Date.now()-tripsAt>FRESH)loadTrips();
+ if(Date.now()-peopleAt>FRESH)loadPeople();
+}
 function paintTrips(list){
  const box=$('#tlist');if(!box)return;
+ if(!list){box.innerHTML='<p class="empty">Loading…</p>';return}
  const now=new Date();now.setHours(0,0,0,0);
  const rows=list.map(t=>({...t,past:pd(t.end)<now}));
  rows.sort((a,b)=>(a.past-b.past)||(a.past?pd(b.end)-pd(a.end):pd(a.start)-pd(b.start)));
- box.innerHTML=rows.length?rows.map(t=>{const name=t.title||t.dest||'Untitled trip';return `<div class="tw"><div class="tdel">${ic('trash',20)}</div><div class="tr" data-cur="${t.current?1:''}" data-id="${esc(t.tid)}" data-title="${esc(name)}"><div class="tr-main" data-act="open" data-v="${esc(t.tid)}"><b>${esc(name)}<button class="pen" data-act="rename" data-v="${esc(t.tid)}" aria-label="Rename trip">${ic('pen',13)}</button>${t.current?'<span class="bdg cur">Current</span>':''}${t.past?'<span class="bdg">Past</span>':''}</b><div class="sub">${range(t.start,t.end)}</div></div><button class="ib" data-act="tshare" data-v="${esc(t.tid)}" aria-label="Share link">${ic('link',18)}</button></div></div>`}).join(''):'<p class="empty">No trips yet.</p>';
+ box.innerHTML=rows.length?rows.map(t=>{const name=t.title||t.dest||'Untitled trip';return `<div class="tw"><div class="tdel">${ic('trash',20)}</div><div class="tr" data-cur="${t.current?1:''}" data-id="${esc(t.tid)}" data-title="${esc(name)}"><div class="tr-main" data-act="open" data-v="${esc(t.tid)}"><b>${esc(name)}${t.current?'<span class="bdg cur">Current</span>':''}${t.past?'<span class="bdg">Past</span>':''}</b><div class="sub">${range(t.start,t.end)}</div></div><button class="ib" data-act="tshare" data-v="${esc(t.tid)}" aria-label="Share link">${ic('link',18)}</button></div></div>`}).join(''):'<p class="empty">No trips yet.</p>';
+}
+function paintPeople(list){
+ const box=$('#slist'),s=window.__sync;if(!box)return;
+ if(!list){box.innerHTML='<p class="empty">Loading…</p>';return}
+ const rows=[...list].sort((a,b)=>(a.role==='owner'?0:1)-(b.role==='owner'?0:1));     // the owner is always first
+ box.innerHTML=rows.map(m=>m.role==='owner'
+  ?mrow(`<b>${esc(m.name||s.email||'Owner')}<button class="pen" data-act="renameme" data-v="${esc(m.name||'')}" aria-label="Rename">${ic('pen',13)}</button></b><div class="sub">Owner</div>`,[['signout','','Sign out','']])
+  :mrow('<b>'+esc(m.name||'Guest')+'</b><div class="sub">Guest</div>',[['kick',m.uid,'Remove','dng']])).join('');
 }
 async function loadTrips(){
  const s=window.__sync;
- if(!$('#tlist')||!s||s.mode!=='cloud'||s.role!=='owner')return;
+ if(!$('#tlist')||!isOwner())return;
  if(tripsBusy){tripsAgain=true;return}
  tripsBusy=true;
- try{
-  const c=s.cachedTrips&&s.cachedTrips();
-  if(c&&c.length)paintTrips(c.map(t=>({...t,current:t.tid===s.tid})));      // show the last known list at once
-  paintTrips(await s.myTrips());
- }catch(e){const b=$('#tlist');if(b&&!b.querySelector('.tr'))b.innerHTML='<p class="empty">Could not load.</p>'}
+ try{TRIPS=await s.myTrips();tripsAt=Date.now();paintTrips(TRIPS)}
+ catch(e){const b=$('#tlist');if(b&&!b.querySelector('.tr'))b.innerHTML='<p class="empty">Could not load.</p>'}
  finally{tripsBusy=false;if(tripsAgain){tripsAgain=false;loadTrips()}}
 }
 async function loadPeople(){
- const s=window.__sync,box=$('#slist');
- if(!box||!s||s.mode!=='cloud'||s.role!=='owner')return;
+ const s=window.__sync;
+ if(!$('#slist')||!isOwner()||peopleBusy)return;
+ peopleBusy=true;
  try{
-  const mem=await s.members();
-  box.innerHTML=mem.map(m=>mrow('<b>'+esc(m.name||'Guest')+'</b><div class="sub">'+(m.role==='owner'?'Owner':'Guest')+'</div>',m.role==='owner'?[]:[['kick',m.uid,'Remove']])).join('');
- }catch(e){box.innerHTML='<p class="empty">Could not load.</p>'}
+  const list=await s.members();PEOPLE={tid:s.tid,list};peopleAt=Date.now();paintPeople(list);
+  try{localStorage.setItem('peopleCache',JSON.stringify(PEOPLE))}catch(e){}
+ }catch(e){const b=$('#slist');if(b&&!b.querySelector('.mrow'))b.innerHTML='<p class="empty">Could not load.</p>'}
+ finally{peopleBusy=false}
+}
+function nameBox(cur,ph,max){return `<div class="rn"><input class="in" id="rn" value="${esc(cur)}" placeholder="${ph}" maxlength="${max}" autocomplete="off"><button class="tile pri" id="rs"><span>Save</span></button></div>`}
+function tripSheet(row){                // tap a trip: rename it, or switch to it
+ const s=window.__sync,tid=row.dataset.id,isCur=!!row.dataset.cur;
+ open(nameBox(row.dataset.title,'Trip name',60)+(isCur?'':`<button class="tile" id="rsw" style="width:100%;margin-top:8px;min-height:42px;flex-direction:row;gap:8px"><i>${ic('swap')}</i><span>Switch to this trip</span></button>`));
+ $('#sheet').classList.add('sm');
+ const save=()=>{const n=$('#rn').value.trim().slice(0,60);close();s.renameTrip(tid,n).then(()=>{tripsAt=0;return loadTrips()}).catch(er=>amsg(er.message||String(er)))};
+ $('#rs').onclick=save;$('#rn').onkeydown=e=>{if(e.key==='Enter')save()};
+ const sw=$('#rsw');if(sw)sw.onclick=()=>{close();s.switchTrip(tid)};
+}
+function nameSheet(cur){                // the owner's own display name
+ const s=window.__sync;
+ open(nameBox(cur,'Your name',30));
+ $('#sheet').classList.add('sm');
+ const save=()=>{const n=$('#rn').value.trim().slice(0,30);close();s.renameMe(n).then(()=>{peopleAt=0;return loadPeople()}).catch(er=>amsg(er.message||String(er)))};
+ $('#rs').onclick=save;$('#rn').onkeydown=e=>{if(e.key==='Enter')save()};$('#rn').focus();$('#rn').select();
 }
 async function copyLink(b,tid){
  const s=window.__sync,lp=s.getLink(tid),old=b.innerHTML;
@@ -805,7 +832,6 @@ async function copyLink(b,tid){
  }
  if(ok){b.innerHTML='<span>Copied</span>';setTimeout(()=>{b.innerHTML=old},2000)}
 }
-let tsT=0,ts=null;
 $('#settings').addEventListener('click',async e=>{
  if(Date.now()-tsT<350)return;
  const lg=e.target.closest('[data-lang]');if(lg){setLang(lg.dataset.lang);return}
@@ -813,25 +839,17 @@ $('#settings').addEventListener('click',async e=>{
  const a=b.dataset.act,v=b.dataset.v,s=window.__sync;
  const conf=()=>{if(b.dataset.c)return true;b.dataset.c=1;b.classList.add('arm');b.querySelector('span').textContent='Tap again';return false};
  try{
-  if(a==='signin')await s.signIn();
-  else if(a==='signout')await s.signOut();
-  else if(a==='open'){if(!b.closest('.tr').dataset.cur)s.switchTrip(v)}
+  if(a==='signout')await s.signOut();
+  else if(a==='open')tripSheet(b.closest('.tr'));
+  else if(a==='renameme')nameSheet(v);
   else if(a==='tshare')await copyLink(b,v);
   else if(a==='newtrip'){if(creating)return;creating=true;b.textContent='Creating…';b.disabled=true;try{await s.newTrip()}catch(err){creating=false;throw err}}
-  else if(a==='rename'){
-   const cur=b.closest('.tr').dataset.title;
-   open(`<div class="rn"><input class="in" id="rn" value="${esc(cur)}" placeholder="Trip name" maxlength="60" autocomplete="off"><button class="tile pri" id="rs"><span>Save</span></button></div>`);
-   $('#sheet').classList.add('sm');
-   const save2=()=>{const n=$('#rn').value.trim().slice(0,60);close();s.renameTrip(v,n).then(loadTrips).catch(er=>amsg(er.message||String(er)))};
-   $('#rs').onclick=save2;$('#rn').onkeydown=e2=>{if(e2.key==='Enter')save2()};$('#rn').focus();$('#rn').select();
-  }
-  else if(a==='kick'&&conf()){await s.kick(v);await loadPeople()}
-  else if(a==='leave'&&conf())await s.leave();
+  else if(a==='kick'&&conf()){await s.kick(v);peopleAt=0;await loadPeople()}
  }catch(err){drawSettings();amsg(err.message||String(err))}
 });
 async function delTrip(tid,row){
  const s=window.__sync;
- try{row.style.opacity='.5';row.querySelector('.sub').textContent='Deleting…';await s.deleteTrip(tid);await loadTrips()}
+ try{row.style.opacity='.5';row.querySelector('.sub').textContent='Deleting…';await s.deleteTrip(tid);tripsAt=0;await loadTrips()}
  catch(err){drawSettings();amsg(err.message||String(err))}
 }
 $('#settings').addEventListener('pointerdown',e=>{const row=e.target.closest('.tw');if(!row||e.target.closest('button'))return;ts={row,x:e.clientX,y:e.clientY,m:'',dx:0}});
@@ -867,7 +885,7 @@ if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWor
 /* ---------- Bottom nav (only place that switches pages) ---------- */
 const pager=$('#pager'),navb=[...document.querySelectorAll('#nav button')],nav=$('#nav');
 let pi=1;
-const go=(i,b)=>{pi=Math.max(0,Math.min(navb.filter(b=>!b.hidden).length-1,i));pager.scrollTo({left:pi*pager.clientWidth,behavior:b||'smooth'});navb.forEach((x,j)=>x.classList.toggle('on',j===pi));if(pi===0)growAll();if(pi===3)drawSettings()};
+const go=(i,b)=>{pi=Math.max(0,Math.min(navb.filter(b=>!b.hidden).length-1,i));pager.scrollTo({left:pi*pager.clientWidth,behavior:b||'smooth'});navb.forEach((x,j)=>x.classList.toggle('on',j===pi));if(pi===0)growAll();if(pi===3)settingsShown()};
 go(1,'instant');addEventListener('load',()=>go(pi,'instant'));addEventListener('resize',()=>go(pi,'instant'));
 navb.forEach((b,i)=>b.onclick=()=>go(i));
 let nx=null,sw=false;
@@ -891,7 +909,8 @@ document.fonts&&document.fonts.ready.then(growAll);
 /* ---------- Language (English / 繁體中文) ---------- */
 const MON={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12},WK={Sun:'日',Mon:'一',Tue:'二',Wed:'三',Thu:'四',Fri:'五',Sat:'六'};
 const MR='(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)',WR='(Sun|Mon|Tue|Wed|Thu|Fri|Sat)';
-const ZH={"Checklist":"待辦清單","Checklist and notes":"待辦與筆記","Done":"完成","Drag to reorder":"拖曳排序","Edit trip":"編輯旅程","Itinerary":"行程","New checklist item":"新增待辦事項","Note options":"筆記選項","Overview":"總覽","Settings":"設定","Add an item…":"新增項目…","Area, hours…":"地區、營業時間…","e.g. 2/9":"例如 2/9","e.g. Sat 2/6 – Sun 2/7":"例如 週六 2/6 – 週日 2/7","e.g. Visit the museum":"例如 參觀博物館","Hotel or rental":"飯店或民宿","Place or activity":"地點或活動","Places nearby":"附近的地點","Reminders for the day":"當天的提醒","Restaurant, hotel, ticket…":"餐廳、飯店、票券…","Search or type":"搜尋或輸入","Time, party size, booking code":"時間、人數、訂位代號","Where are you today?":"今天在哪裡?","Write a note…":"寫點筆記…","Your name":"你的名字","+ Add":"+ 新增","+ Add stop":"+ 新增行程","+1 day":"+1 天","Accommodation":"住宿","Account":"帳號","Add":"新增","Add photo":"新增照片","Add to schedule":"加入行程","Add trip":"新增航班","Airline":"航空公司","AM":"上午","Area":"地區","Arrival day":"抵達日","Arrive":"抵達","Can edit":"可編輯","Check-in":"入住","Check-out":"退房","Code":"航班號","Confirm":"確認","Date":"日期","Dates":"日期","days":"天","Delete":"刪除","Delete idea":"刪除想法","Delete this note":"刪除這則筆記","Depart":"出發","Departs":"出發日","Departure":"去程","Destination":"目的地","Details":"詳細資訊","Direction":"方向","Double-tap a day's banner to edit the day. Tap a stop to edit it.":"連點兩下當天的橫幅可編輯當天內容,點行程項目可編輯該項目。","Double-tap to add details":"連點兩下新增內容","Edit idea":"編輯想法","Edit reservation":"編輯預約","Edit stay":"編輯住宿","Edit stop":"編輯行程項目","End":"結束","Food":"美食","From":"出發地","hrs":"時","Idea":"想法","Ideas":"想法","Join trip":"加入旅程","Language":"語言","Leave trip":"離開旅程","min":"分","Name":"名稱","Nearby":"周邊","New idea":"新增想法","New reservation":"新增預約","New stay":"新增住宿","Night":"晚上","Note":"備註","Notes":"筆記","Open in Google Maps":"在 Google 地圖開啟","Opening your trip…":"正在開啟你的旅程…","Other":"其他","Owner":"擁有者","People":"成員","Photo":"照片","Photo or GIF":"照片或 GIF","Pin places you might want to go. Tap a card to edit.":"先收藏想去的地方,之後再決定。點卡片可編輯。","Please enter your name.":"請輸入你的名字。","Please rotate your phone to portrait.":"請將手機轉回直式。","PM":"下午","Remove":"移除","Remove flight":"移除航班","Reservations":"預約","Return":"回程","Revoke":"撤銷","Same day":"當天","Save":"儲存","Save trip":"儲存旅程","Saved on this device only.":"資料只存在這台裝置上。","Sign in to back up and share this trip.":"登入後即可備份並分享這趟旅程。","Add your Firebase settings to turn on sync (see README).":"填入 Firebase 設定即可開啟同步(請見 README)。","Schedule on":"排入日期","sec":"秒","Shop":"購物","Sight":"景點","Sign in":"登入","Sign in with Google":"使用 Google 登入","Sign out":"登出","Start":"開始","Swipe left to delete · drag the handle to reorder.":"向左滑動刪除 · 拖曳把手排序。","Sync is still loading…":"同步功能載入中…","Tap again":"再點一次","Time of day":"時段","To":"抵達地","Trip Planner":"旅行規劃","Type":"類型","View only":"僅檢視","What":"內容","Joining…":"加入中…","Still opening… check your connection, then reload.":"仍在開啟中…請檢查網路連線後重新整理。","Cloud sync is unavailable right now. Check your connection.":"目前無法使用雲端同步,請檢查網路連線。","Could not load.":"無法載入。","Loading…":"載入中…","No stays yet. Add a hotel or rental.":"還沒有住宿,新增飯店或民宿吧。","No reservations yet. Add a table, hotel or ticket.":"還沒有預約,新增餐廳、飯店或票券吧。","Add what to pack or book before you leave.":"新增出發前要準備或預訂的事項。","Nothing to pack or do yet":"還沒有待辦事項","Nothing planned yet. Add your first stop below.":"還沒有安排,從下方新增第一個行程吧。","Trip complete":"旅程結束","Photo ready":"照片已選好","Replace photo":"更換照片","Replace photo or GIF":"更換照片或 GIF","Remove banner photo":"移除橫幅照片","Remove photo":"移除照片","This GIF is over 3 MB. Please use a smaller one, for example by shrinking it at ezgif.com.":"這個 GIF 超過 3 MB,請換小一點的檔案,例如到 ezgif.com 壓縮。","This image could not be read. Try a JPEG or PNG.":"無法讀取這張圖片,請改用 JPEG 或 PNG。","Taipei":"台北","Seoul":"首爾","Boston":"波士頓","Tokyo":"東京","Osaka":"大阪","Los Angeles":"洛杉磯","New York":"紐約","San Francisco":"舊金山","London":"倫敦","Bangkok":"曼谷","Chicago":"芝加哥","Salzburg":"薩爾茲堡","or join with a link":"或用連結加入","Paste the link":"貼上連結","Paste the link you were sent.":"請貼上你收到的連結。","You're invited! Enter your name to join this trip.":"你受邀加入這趟旅程!請輸入你的名字。","This trip is private. Sign in, or join with the link you were sent.":"這是私人旅程。請登入,或使用收到的連結加入。","An installed app keeps its own login. Sign in here, or enter your name and paste the link you were sent.":"安裝到主畫面的 app 有獨立的登入狀態。請在這裡登入,或輸入你的名字並貼上收到的連結。","This link is invalid or has been reset.":"這個連結無效或已被重設。","Share link":"分享連結","Guest":"訪客","Copied":"已複製","Copy this link":"請複製這個連結","My trips":"我的旅程","New trip":"新增旅程","Creating…":"建立中…","Deleting…":"刪除中…","Current":"目前","Past":"已結束","Untitled trip":"未命名旅程","No trips yet.":"還沒有旅程。","Delete trip":"刪除旅程","Delete this trip and all of its data? This cannot be undone.":"要刪除這趟旅程和它所有的資料嗎?此動作無法復原。","You can keep up to 20 trips.":"最多可以保留 20 趟旅程。","This trip is no longer available.":"這趟旅程已經不存在了。","Trip name":"旅程名稱","+ New":"+ 新增"};
+const ZH={"Checklist":"待辦清單","Checklist and notes":"待辦與筆記","Done":"完成","Drag to reorder":"拖曳排序","Edit trip":"編輯旅程","Itinerary":"行程","New checklist item":"新增待辦事項","Note options":"筆記選項","Overview":"總覽","Settings":"設定","Add an item…":"新增項目…","Area, hours…":"地區、營業時間…","e.g. 2/9":"例如 2/9","e.g. Sat 2/6 – Sun 2/7":"例如 週六 2/6 – 週日 2/7","e.g. Visit the museum":"例如 參觀博物館","Hotel or rental":"飯店或民宿","Place or activity":"地點或活動","Places nearby":"附近的地點","Reminders for the day":"當天的提醒","Restaurant, hotel, ticket…":"餐廳、飯店、票券…","Search or type":"搜尋或輸入","Time, party size, booking code":"時間、人數、訂位代號","Where are you today?":"今天在哪裡?","Write a note…":"寫點筆記…","Your name":"你的名字","+ Add":"+ 新增","+ Add stop":"+ 新增行程","+1 day":"+1 天","Accommodation":"住宿","Account":"帳號","Add":"新增","Add photo":"新增照片","Add to schedule":"加入行程","Add trip":"新增航班","Airline":"航空公司","AM":"上午","Area":"地區","Arrival day":"抵達日","Arrive":"抵達","Can edit":"可編輯","Check-in":"入住","Check-out":"退房","Code":"航班號","Confirm":"確認","Date":"日期","Dates":"日期","days":"天","Delete":"刪除","Delete idea":"刪除想法","Delete this note":"刪除這則筆記","Depart":"出發","Departs":"出發日","Departure":"去程","Destination":"目的地","Details":"詳細資訊","Direction":"方向","Double-tap a day's banner to edit the day. Tap a stop to edit it.":"連點兩下當天的橫幅可編輯當天內容,點行程項目可編輯該項目。","Double-tap to add details":"連點兩下新增內容","Edit idea":"編輯想法","Edit reservation":"編輯預約","Edit stay":"編輯住宿","Edit stop":"編輯行程項目","End":"結束","Food":"美食","From":"出發地","hrs":"時","Idea":"想法","Ideas":"想法","Join trip":"加入旅程","Language":"語言","Leave trip":"離開旅程","min":"分","Name":"名稱","Nearby":"周邊","New idea":"新增想法","New reservation":"新增預約","New stay":"新增住宿","Night":"晚上","Note":"備註","Notes":"筆記","Open in Google Maps":"在 Google 地圖開啟","Opening your trip…":"正在開啟你的旅程…","Other":"其他","Owner":"擁有者","People":"成員","Photo":"照片","Photo or GIF":"照片或 GIF","Pin places you might want to go. Tap a card to edit.":"先收藏想去的地方,之後再決定。點卡片可編輯。","Please enter your name.":"請輸入你的名字。","Please rotate your phone to portrait.":"請將手機轉回直式。","PM":"下午","Remove":"移除","Remove flight":"移除航班","Reservations":"預約","Return":"回程","Revoke":"撤銷","Same day":"當天","Save":"儲存","Save trip":"儲存旅程","Saved on this device only.":"資料只存在這台裝置上。","Sign in to back up and share this trip.":"登入後即可備份並分享這趟旅程。","Add your Firebase settings to turn on sync (see README).":"填入 Firebase 設定即可開啟同步(請見 README)。","Schedule on":"排入日期","sec":"秒","Shop":"購物","Sight":"景點","Sign in":"登入","Sign in with Google":"使用 Google 登入","Sign out":"登出","Start":"開始","Swipe left to delete · drag the handle to reorder.":"向左滑動刪除 · 拖曳把手排序。","Sync is still loading…":"同步功能載入中…","Tap again":"再點一次","Time of day":"時段","To":"抵達地","Trip Planner":"旅行規劃","Type":"類型","View only":"僅檢視","What":"內容","Joining…":"加入中…","Still opening… check your connection, then reload.":"仍在開啟中…請檢查網路連線後重新整理。","Cloud sync is unavailable right now. Check your connection.":"目前無法使用雲端同步,請檢查網路連線。","Could not load.":"無法載入。","Loading…":"載入中…","No stays yet. Add a hotel or rental.":"還沒有住宿,新增飯店或民宿吧。","No reservations yet. Add a table, hotel or ticket.":"還沒有預約,新增餐廳、飯店或票券吧。","Add what to pack or book before you leave.":"新增出發前要準備或預訂的事項。","Nothing to pack or do yet":"還沒有待辦事項","Nothing planned yet. Add your first stop below.":"還沒有安排,從下方新增第一個行程吧。","Trip complete":"旅程結束","Photo ready":"照片已選好","Replace photo":"更換照片","Replace photo or GIF":"更換照片或 GIF","Remove banner photo":"移除橫幅照片","Remove photo":"移除照片","This GIF is over 3 MB. Please use a smaller one, for example by shrinking it at ezgif.com.":"這個 GIF 超過 3 MB,請換小一點的檔案,例如到 ezgif.com 壓縮。","This image could not be read. Try a JPEG or PNG.":"無法讀取這張圖片,請改用 JPEG 或 PNG。","Taipei":"台北","Seoul":"首爾","Boston":"波士頓","Tokyo":"東京","Osaka":"大阪","Los Angeles":"洛杉磯","New York":"紐約","San Francisco":"舊金山","London":"倫敦","Bangkok":"曼谷","Chicago":"芝加哥","Salzburg":"薩爾茲堡","or join with a link":"或用連結加入","Paste the link":"貼上連結","Paste the link you were sent.":"請貼上你收到的連結。","You're invited! Enter your name to join this trip.":"你受邀加入這趟旅程!請輸入你的名字。","This trip is private. Sign in, or join with the link you were sent.":"這是私人旅程。請登入,或使用收到的連結加入。","An installed app keeps its own login. Sign in here, or enter your name and paste the link you were sent.":"安裝到主畫面的 app 有獨立的登入狀態。請在這裡登入,或輸入你的名字並貼上收到的連結。","This link is invalid or has been reset.":"這個連結無效或已被重設。","Share link":"分享連結","Guest":"訪客","Copied":"已複製","Copy this link":"請複製這個連結","My trips":"我的旅程","New trip":"新增旅程","Creating…":"建立中…","Deleting…":"刪除中…","Current":"目前","Past":"已結束","Untitled trip":"未命名旅程","No trips yet.":"還沒有旅程。","Delete trip":"刪除旅程","Delete this trip and all of its data? This cannot be undone.":"要刪除這趟旅程和它所有的資料嗎?此動作無法復原。","You can keep up to 20 trips.":"最多可以保留 20 趟旅程。","This trip is no longer available.":"這趟旅程已經不存在了。","Trip name":"旅程名稱","+ New":"+ 新增","Switch to this trip":"切換到這趟旅程","Rename":"重新命名","Search airport":"搜尋機場"};
+AP.forEach(a=>{if(a[2])ZH[a[1]]=a[2]});
 const ZHR=[
  [new RegExp('^'+MR+' (\\d+), (\\d{4})$'),(_,m,d,y)=>`${y}年${MON[m]}月${d}日`],
  [new RegExp('^'+MR+' (\\d+) – '+MR+' (\\d+) · (\\d+) days$'),(_,a,b,c,d,n)=>`${MON[a]}月${b}日 – ${MON[c]}月${d}日 · ${n} 天`],
@@ -938,11 +957,12 @@ function trNode(n){
   const out=tr(o);if(out!==n.nodeValue)n.nodeValue=out;TX.set(n,{o,t:out});
  }else if(n.nodeType===1){trAttrs(n);n.childNodes.forEach(trNode)}
 }
+function fillAirports(){const dl=$('#airports');if(!dl)return;dl.innerHTML=AP.map(a=>`<option value="${esc(a[0]+' '+a[1]+(a[3]?' '+a[3]:''))}"${LANG==='zh'&&a[2]?` label="${esc(a[2]+' '+a[0])}"`:''}></option>`).join('')}
 function fillAirlines(){const dl=$('#airlines');if(!dl)return;dl.innerHTML=AIRZH.map(a=>`<option value="${esc(a[0])}"${LANG==='zh'&&a[1]&&a[1]!==a[0]?` label="${esc(a[1])}"`:''}></option>`).join('')}
 function setLang(l){
  LANG=l;try{localStorage.setItem('lang',l)}catch(e){}
  document.documentElement.lang=l==='zh'?'zh-Hant':'en';
- fillAirlines();trNode(document.body);drawHero();drawSettings();
+ fillAirlines();fillAirports();trNode(document.body);drawHero();drawSettings();
 }
 new MutationObserver(ms=>{for(const m of ms){
  if(m.type==='childList')m.addedNodes.forEach(trNode);
@@ -950,7 +970,7 @@ new MutationObserver(ms=>{for(const m of ms){
  else if(m.type==='attributes')trAttrs(m.target)}
 }).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:ATTRS});
 document.documentElement.lang=LANG==='zh'?'zh-Hant':'en';
-fillAirlines();trNode(document.body);
+fillAirlines();fillAirports();trNode(document.body);
 </script>
 <script type="module" src="sync.js"></script>
 </body>
