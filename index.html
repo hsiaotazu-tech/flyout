@@ -317,6 +317,36 @@ input,select,textarea{font-size:16px!important}
 .lgs button{border:0;background:none;color:var(--mute);font:700 12px 'DM Sans',sans-serif;padding:6px 10px;border-radius:9px;cursor:pointer}
 .lgs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
 .nav button[hidden]{display:none}
+/* v22: my trips */
+.tr{display:flex;align-items:center;gap:8px;padding:10px 0}
+.tr+.tr{border-top:1px solid var(--line)}
+.tr-main{flex:1;min-width:0;cursor:pointer}
+.tr-main b{display:block;font-size:15px;line-height:1.3}
+.bdg{display:inline-block;font-size:10.5px;font-weight:700;border-radius:8px;padding:2px 7px;margin-left:6px;background:var(--sage);color:var(--pine);vertical-align:1px}
+.bdg.cur{background:var(--acc);color:#fff}
+.ib{flex:none;min-width:40px;height:40px;border:0;border-radius:12px;background:var(--sage);color:var(--ink);display:grid;place-items:center;font:700 12px 'DM Sans',sans-serif;cursor:pointer;padding:0 8px}
+.ib.dng{color:var(--acc)}
+#tlist+.tiles{margin-top:10px}
+/* v23: swipe-to-delete trips, rename pencil, tiny status dot, no Google sign-in for invited guests */
+.tw{position:relative;overflow:hidden}
+.tw+.tw{border-top:1px solid var(--line)}
+.tw .tdel{position:absolute;inset:0;background:#d9482b;color:#fff;display:flex;align-items:center;justify-content:flex-end;padding-right:18px}
+.tr{background:var(--card);position:relative;touch-action:pan-y}
+.tr+.tr{border-top:0}
+.pen{border:0;background:none;color:var(--mute);opacity:.55;padding:2px 4px;margin-left:2px;cursor:pointer;vertical-align:-2px}
+.nd{top:50%;left:50%;width:3px;height:3px;margin:-1.5px 0 0 -1.5px;border:0;box-sizing:border-box}
+#nd[data-s=off]{background:currentColor;opacity:.45}
+.tiles[hidden]{display:none}
+/* v24: compact rename popup, small New button beside the My trips label */
+.rn{display:flex;gap:8px;align-items:stretch}
+.rn .in{flex:1;text-align:left}
+.rn .tile{flex:none;min-width:76px;min-height:0;padding:0 14px}
+.lbrow{display:flex;align-items:center;justify-content:space-between}
+.lbrow .addb{text-transform:none;letter-spacing:0;padding:5px 12px;font-size:12px}
+/* v25: narrower rename popup */
+.sheet.sm{width:min(290px,100%);padding:10px 12px;border-radius:22px}
+.sheet.sm .rn .in{padding:8px 12px}
+.sheet.sm .rn .tile{min-width:64px;padding:0 12px;border-radius:14px}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 </style>
 </head>
@@ -449,7 +479,7 @@ function drawHero(){
 
 /* ---------- Settings modal ---------- */
 const sel=(id,opts,v)=>`<select class="in" id="${id}" style="appearance:none">${opts.map(o=>`<option value="${esc(o)}" ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
-const open=(h,f)=>{if(RO&&!f)return;$('#sheet').innerHTML=h;$('#ov').classList.add('on')};
+const open=(h,f)=>{if(RO&&!f)return;$('#sheet').className='sheet';$('#sheet').innerHTML=h;$('#ov').classList.add('on')};
 const close=()=>$('#ov').classList.remove('on');
 $('#ov').onclick=e=>{if(e.target.id==='ov')close()};
 let tab=0,draft;
@@ -685,6 +715,7 @@ window.__app={
   relabel();
   for(const k of Object.keys(v)){const m=k.match(/^day(\d+)$/);if(m){const i=+m[1];while(days.length<=i)days.push(blank());days[i]=Object.assign(blank(),v[k]);done.push(k)}}
   redraw();return done},
+ template:()=>{const t0=new Date();t0.setDate(t0.getDate()+30);return{trip:{dest:'My Trip',start:iso(t0),end:iso(ad(t0,6)),f:[{al:'',code:'',from:'TPE',to:'NRT',dep:'09:00',arr:'13:00',p:0,dir:0,o:0},{al:'',code:'',from:'NRT',to:'TPE',dep:'15:00',arr:'18:00',p:0,dir:1,o:0}]},ideas:[],stays:[],resv:[],checks:[],notes:['']}},
  status:()=>drawStatus()
 };
 function drawStatus(){
@@ -700,8 +731,8 @@ function drawStatus(){
  if(locked){
   $('#lk-in').hidden=!s.inited;
   $('#lk-msg').textContent=!s.inited?'Opening your trip…':(s.error||(s.pending?"You're invited! Enter your name to join this trip.":'This trip is private. Sign in, or join with the link you were sent.'));
-  $('#lk-link').hidden=!!s.pending;$('#lk-or').hidden=!!s.pending;
-  $('#lk-hint').hidden=!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
+  $('#lk-link').hidden=!!s.pending;$('#lk-or').hidden=!!s.pending;$('#lk-sign').closest('.tiles').hidden=!!s.pending;
+  $('#lk-hint').hidden=!!s.pending||!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
  }
  drawNotes();drawSettings();
 }
@@ -712,16 +743,18 @@ const tl=(a,i,l,c)=>`<button class="tile ${c?'dng':''}" data-act="${a}"><i>${ic(
 const mrow=(l,b)=>`<div class="mrow"><div>${l}</div>${b.map(x=>`<button class="tile dng" data-act="${x[0]}" data-v="${esc(x[1])}"><span>${x[2]}</span></button>`).join('')}</div>`;
 const amsg=t=>{const m=$('#acm');if(m)m.textContent=t};
 const card=(t,h)=>`<div class="lb" style="text-align:left;margin:22px 0 8px">${t}</div><div class="card">${h}</div>`;
+const fmtD=(d,y)=>d.toLocaleDateString('en-US',y?{month:'short',day:'numeric',year:'numeric'}:{month:'short',day:'numeric'});
+const range=(a,b)=>{const x=pd(a),y=pd(b);return x.getFullYear()===y.getFullYear()?fmtD(x)+' – '+fmtD(y,1):fmtD(x,1)+' – '+fmtD(y,1)};
 function drawSettings(){
  const el=$('#settings'),s=window.__sync;if(!el)return;
- let st,acct='',share='',people='';
+ let st,acct='',trips='',people='';
  if(!s)st='Sync is still loading…';
  else if(s.mode==='cloud'){
   const own=s.role==='owner';
   st=own?'Signed in as '+(s.email||'owner'):'You joined this trip as '+(s.role==='editor'?'an editor':'a viewer')+'.';
   acct=`<div class="tiles" style="--n:1">${own?tl('signout','out','Sign out'):tl('leave','out','Leave trip',1)}</div>`;
   if(own){
-   share=card('Share this trip',`<p class="sub" style="margin:0 0 10px">Share this trip! Open the link and enter your name to join.</p><div class="tiles" style="--n:2;margin-top:0">${tl('share','link','Share link')}${tl('newlink','link','New link',1)}</div><div id="alk"></div>`);
+   trips=`<div class="lb lbrow" style="text-align:left;margin:22px 0 8px"><span>My trips</span><button class="addb" data-act="newtrip" aria-label="New trip">+ New</button></div><div class="card"><div id="tlist"><p class="empty">Loading…</p></div></div>`;
    people=card('People','<div id="slist"><p class="empty">Loading…</p></div>');
   }
  }else{
@@ -729,8 +762,18 @@ function drawSettings(){
   if(s.configured)acct=`<div class="tiles" style="--n:1">${tl('signin','user','Sign in')}</div>`;
  }
  if(s&&s.error)st=s.error+' '+st;
- el.innerHTML=`<div class="trow"><h1 class="serif" style="font-size:26px">Settings</h1><div class="lgs" role="group" aria-label="Language"><button data-lang="en" class="${LANG==='en'?'on':''}">EN</button><button data-lang="zh" class="${LANG==='zh'?'on':''}">中文</button></div></div>`+card('Account',`<p class="sub" id="acm" style="margin:0 0 12px">${esc(st)}</p>${acct}`)+share+people;
- loadPeople();
+ el.innerHTML=`<div class="trow"><h1 class="serif" style="font-size:26px">Settings</h1><div class="lgs" role="group" aria-label="Language"><button data-lang="en" class="${LANG==='en'?'on':''}">EN</button><button data-lang="zh" class="${LANG==='zh'?'on':''}">中文</button></div></div>`+card('Account',`<p class="sub" id="acm" style="margin:0 0 12px">${esc(st)}</p>${acct}`)+trips+people;
+ loadTrips();loadPeople();
+}
+async function loadTrips(){
+ const s=window.__sync,box=$('#tlist');
+ if(!box||!s||s.mode!=='cloud'||s.role!=='owner')return;
+ try{
+  const now=new Date();now.setHours(0,0,0,0);
+  const rows=(await s.myTrips()).map(t=>({...t,past:pd(t.end)<now}));
+  rows.sort((a,b)=>(a.past-b.past)||(a.past?pd(b.end)-pd(a.end):pd(a.start)-pd(b.start)));
+  box.innerHTML=rows.length?rows.map(t=>{const name=t.title||t.dest||'Untitled trip';return `<div class="tw"><div class="tdel">${ic('trash',20)}</div><div class="tr" data-cur="${t.current?1:''}" data-id="${esc(t.tid)}" data-title="${esc(name)}"><div class="tr-main" data-act="open" data-v="${esc(t.tid)}"><b>${esc(name)}<button class="pen" data-act="rename" data-v="${esc(t.tid)}" aria-label="Rename trip">${ic('pen',13)}</button>${t.current?'<span class="bdg cur">Current</span>':''}${t.past?'<span class="bdg">Past</span>':''}</b><div class="sub">${range(t.start,t.end)}</div></div><button class="ib" data-act="tshare" data-v="${esc(t.tid)}" aria-label="Share link">${ic('link',18)}</button></div></div>`}).join(''):'<p class="empty">No trips yet.</p>';
+ }catch(e){box.innerHTML='<p class="empty">Could not load.</p>'}
 }
 async function loadPeople(){
  const s=window.__sync,box=$('#slist');
@@ -740,20 +783,21 @@ async function loadPeople(){
   box.innerHTML=mem.map(m=>mrow('<b>'+esc(m.name||'Guest')+'</b><div class="sub">'+(m.role==='owner'?'Owner':'Guest')+'</div>',m.role==='owner'?[]:[['kick',m.uid,'Remove']])).join('');
  }catch(e){box.innerHTML='<p class="empty">Could not load.</p>'}
 }
-async function shareLink(l){
- $('#alk').innerHTML=`<input class="in" readonly id="lk" value="${esc(l)}" style="margin-top:10px"><p class="sub" id="alm" style="margin:8px 0 0"></p>`;
- const k=$('#lk');k.focus();k.select();
- let note='Press and hold the link to copy.';
+async function copyLink(b,tid){
+ const s=window.__sync,lp=s.getLink(tid),old=b.innerHTML;
+ let ok=false;
  try{
-  if(navigator.share){await navigator.share({title:'Trip Planner',text:L('Share this trip! Open the link and enter your name to join.'),url:l});note=''}
-  else{await navigator.clipboard.writeText(l);note='Link copied.'}
+  if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write)await navigator.clipboard.write([new ClipboardItem({'text/plain':lp.then(l=>new Blob([l],{type:'text/plain'}))})]);
+  else await navigator.clipboard.writeText(await lp);
+  ok=true;
  }catch(e){
-  if(e&&e.name==='AbortError')note='';
-  else{try{await navigator.clipboard.writeText(l);note='Link copied.'}catch(_){}}
+  try{window.prompt(L('Copy this link'),await lp)}catch(_){throw e}      // clipboard blocked: let the person copy it by hand
  }
- $('#alm').textContent=note;
+ if(ok){b.innerHTML='<span>Copied</span>';setTimeout(()=>{b.innerHTML=old},2000)}
 }
+let tsT=0,ts=null;
 $('#settings').addEventListener('click',async e=>{
+ if(Date.now()-tsT<350)return;
  const lg=e.target.closest('[data-lang]');if(lg){setLang(lg.dataset.lang);return}
  const b=e.target.closest('[data-act]');if(!b)return;
  const a=b.dataset.act,v=b.dataset.v,s=window.__sync;
@@ -761,12 +805,40 @@ $('#settings').addEventListener('click',async e=>{
  try{
   if(a==='signin')await s.signIn();
   else if(a==='signout')await s.signOut();
-  else if(a==='share')await shareLink(await s.getLink());
-  else if(a==='newlink'&&conf())await shareLink(await s.newLink());
+  else if(a==='open'){if(!b.closest('.tr').dataset.cur)s.switchTrip(v)}
+  else if(a==='tshare')await copyLink(b,v);
+  else if(a==='newtrip'){b.textContent='Creating…';b.disabled=true;await s.newTrip()}
+  else if(a==='rename'){
+   const cur=b.closest('.tr').dataset.title;
+   open(`<div class="rn"><input class="in" id="rn" value="${esc(cur)}" placeholder="Trip name" maxlength="60" autocomplete="off"><button class="tile pri" id="rs"><span>Save</span></button></div>`);
+   $('#sheet').classList.add('sm');
+   const save2=()=>{const n=$('#rn').value.trim().slice(0,60);close();s.renameTrip(v,n).then(loadTrips).catch(er=>amsg(er.message||String(er)))};
+   $('#rs').onclick=save2;$('#rn').onkeydown=e2=>{if(e2.key==='Enter')save2()};$('#rn').focus();$('#rn').select();
+  }
   else if(a==='kick'&&conf()){await s.kick(v);await loadPeople()}
   else if(a==='leave'&&conf())await s.leave();
- }catch(err){amsg(err.message||String(err))}
+ }catch(err){drawSettings();amsg(err.message||String(err))}
 });
+async function delTrip(tid,row){
+ const s=window.__sync;
+ try{row.style.opacity='.5';row.querySelector('.sub').textContent='Deleting…';await s.deleteTrip(tid);await loadTrips()}
+ catch(err){drawSettings();amsg(err.message||String(err))}
+}
+$('#settings').addEventListener('pointerdown',e=>{const row=e.target.closest('.tw');if(!row||e.target.closest('button'))return;ts={row,x:e.clientX,y:e.clientY,m:'',dx:0}});
+$('#settings').addEventListener('pointermove',e=>{
+ if(!ts)return;const dx=e.clientX-ts.x,dy=e.clientY-ts.y;ts.dx=dx;
+ if(!ts.m){if(Math.abs(dx)>10&&Math.abs(dx)>Math.abs(dy)*1.3){ts.m='s';ts.row.setPointerCapture(e.pointerId)}else if(Math.abs(dy)>10){ts=null;return}else return}
+ const f=ts.row.querySelector('.tr');f.style.transition='none';f.style.transform=`translateX(${Math.min(0,dx)}px)`;
+});
+const tsUp=()=>{
+ if(!ts)return;const c=ts;ts=null;if(c.m!=='s')return;tsT=Date.now();
+ const f=c.row.querySelector('.tr');f.style.transition='transform .2s';
+ if(c.dx<-90){
+  f.style.transform='translateX(-110%)';
+  setTimeout(()=>{if(confirm(L('Delete this trip and all of its data? This cannot be undone.')))delTrip(f.dataset.id,f);else f.style.transform=''},200);
+ }else f.style.transform='';
+};
+$('#settings').addEventListener('pointerup',tsUp);$('#settings').addEventListener('pointercancel',tsUp);
 drawSettings();
 $('#lk-ic').innerHTML=PL(90);
 $('#rot-ic').innerHTML=ic('phone',44);
@@ -809,10 +881,12 @@ document.fonts&&document.fonts.ready.then(growAll);
 /* ---------- Language (English / 繁體中文) ---------- */
 const MON={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12},WK={Sun:'日',Mon:'一',Tue:'二',Wed:'三',Thu:'四',Fri:'五',Sat:'六'};
 const MR='(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)',WR='(Sun|Mon|Tue|Wed|Thu|Fri|Sat)';
-const ZH={"Checklist":"待辦清單","Checklist and notes":"待辦與筆記","Done":"完成","Drag to reorder":"拖曳排序","Edit trip":"編輯旅程","Itinerary":"行程","New checklist item":"新增待辦事項","Note options":"筆記選項","Overview":"總覽","Settings":"設定","Add an item…":"新增項目…","Area, hours…":"地區、營業時間…","e.g. 2/9":"例如 2/9","e.g. Sat 2/6 – Sun 2/7":"例如 週六 2/6 – 週日 2/7","e.g. Visit the museum":"例如 參觀博物館","Hotel or rental":"飯店或民宿","Place or activity":"地點或活動","Places nearby":"附近的地點","Reminders for the day":"當天的提醒","Restaurant, hotel, ticket…":"餐廳、飯店、票券…","Search or type":"搜尋或輸入","Time, party size, booking code":"時間、人數、訂位代號","Where are you today?":"今天在哪裡?","Write a note…":"寫點筆記…","Your name":"你的名字","+ Add":"+ 新增","+ Add stop":"+ 新增行程","+1 day":"+1 天","Accommodation":"住宿","Account":"帳號","Add":"新增","Add photo":"新增照片","Add to schedule":"加入行程","Add trip":"新增航班","Airline":"航空公司","AM":"上午","Area":"地區","Arrival day":"抵達日","Arrive":"抵達","Can edit":"可編輯","Check-in":"入住","Check-out":"退房","Code":"航班號","Confirm":"確認","Date":"日期","Dates":"日期","days":"天","Delete":"刪除","Delete idea":"刪除想法","Delete this note":"刪除這則筆記","Depart":"出發","Departs":"出發日","Departure":"去程","Destination":"目的地","Details":"詳細資訊","Direction":"方向","Double-tap a day's banner to edit the day. Tap a stop to edit it.":"連點兩下當天的橫幅可編輯當天內容,點行程項目可編輯該項目。","Double-tap to add details":"連點兩下新增內容","Edit idea":"編輯想法","Edit reservation":"編輯預約","Edit stay":"編輯住宿","Edit stop":"編輯行程項目","End":"結束","Food":"美食","From":"出發地","hrs":"時","Idea":"想法","Ideas":"想法","Join trip":"加入旅程","Language":"語言","Leave trip":"離開旅程","min":"分","Name":"名稱","Nearby":"周邊","New idea":"新增想法","New reservation":"新增預約","New stay":"新增住宿","Night":"晚上","Note":"備註","Notes":"筆記","Open in Google Maps":"在 Google 地圖開啟","Opening your trip…":"正在開啟你的旅程…","Other":"其他","Owner":"擁有者","People":"成員","Photo":"照片","Photo or GIF":"照片或 GIF","Pin places you might want to go. Tap a card to edit.":"先收藏想去的地方,之後再決定。點卡片可編輯。","Please enter your name.":"請輸入你的名字。","Please rotate your phone to portrait.":"請將手機轉回直式。","PM":"下午","Remove":"移除","Remove flight":"移除航班","Reservations":"預約","Return":"回程","Revoke":"撤銷","Same day":"當天","Save":"儲存","Save trip":"儲存旅程","Saved on this device only.":"資料只存在這台裝置上。","Sign in to back up and share this trip.":"登入後即可備份並分享這趟旅程。","Add your Firebase settings to turn on sync (see README).":"填入 Firebase 設定即可開啟同步(請見 README)。","Schedule on":"排入日期","sec":"秒","Share this trip":"分享這趟旅程","Shop":"購物","Sight":"景點","Sign in":"登入","Sign in with Google":"使用 Google 登入","Sign out":"登出","Start":"開始","Swipe left to delete · drag the handle to reorder.":"向左滑動刪除 · 拖曳把手排序。","Sync is still loading…":"同步功能載入中…","Tap again":"再點一次","Time of day":"時段","To":"抵達地","Trip Planner":"旅行規劃","Type":"類型","View only":"僅檢視","What":"內容","Joining…":"加入中…","Still opening… check your connection, then reload.":"仍在開啟中…請檢查網路連線後重新整理。","Cloud sync is unavailable right now. Check your connection.":"目前無法使用雲端同步,請檢查網路連線。","Could not load.":"無法載入。","Loading…":"載入中…","No stays yet. Add a hotel or rental.":"還沒有住宿,新增飯店或民宿吧。","No reservations yet. Add a table, hotel or ticket.":"還沒有預約,新增餐廳、飯店或票券吧。","Add what to pack or book before you leave.":"新增出發前要準備或預訂的事項。","Nothing to pack or do yet":"還沒有待辦事項","Nothing planned yet. Add your first stop below.":"還沒有安排,從下方新增第一個行程吧。","Trip complete":"旅程結束","Photo ready":"照片已選好","Replace photo":"更換照片","Replace photo or GIF":"更換照片或 GIF","Remove banner photo":"移除橫幅照片","Remove photo":"移除照片","This GIF is over 3 MB. Please use a smaller one, for example by shrinking it at ezgif.com.":"這個 GIF 超過 3 MB,請換小一點的檔案,例如到 ezgif.com 壓縮。","This image could not be read. Try a JPEG or PNG.":"無法讀取這張圖片,請改用 JPEG 或 PNG。","Taipei":"台北","Seoul":"首爾","Boston":"波士頓","Tokyo":"東京","Osaka":"大阪","Los Angeles":"洛杉磯","New York":"紐約","San Francisco":"舊金山","London":"倫敦","Bangkok":"曼谷","Chicago":"芝加哥","Salzburg":"薩爾茲堡","or join with a link":"或用連結加入","Paste the link":"貼上連結","Paste the link you were sent.":"請貼上你收到的連結。","You're invited! Enter your name to join this trip.":"你受邀加入這趟旅程!請輸入你的名字。","This trip is private. Sign in, or join with the link you were sent.":"這是私人旅程。請登入,或使用收到的連結加入。","An installed app keeps its own login. Sign in here, or enter your name and paste the link you were sent.":"安裝到主畫面的 app 有獨立的登入狀態。請在這裡登入,或輸入你的名字並貼上收到的連結。","This link is invalid or has been reset.":"這個連結無效或已被重設。","Share this trip! Open the link and enter your name to join.":"分享行程！點擊連結輸入名字即可加入","Share link":"分享連結","New link":"新連結","Link copied.":"連結已複製。","Press and hold the link to copy.":"長按連結即可複製。","Guest":"訪客"};
+const ZH={"Checklist":"待辦清單","Checklist and notes":"待辦與筆記","Done":"完成","Drag to reorder":"拖曳排序","Edit trip":"編輯旅程","Itinerary":"行程","New checklist item":"新增待辦事項","Note options":"筆記選項","Overview":"總覽","Settings":"設定","Add an item…":"新增項目…","Area, hours…":"地區、營業時間…","e.g. 2/9":"例如 2/9","e.g. Sat 2/6 – Sun 2/7":"例如 週六 2/6 – 週日 2/7","e.g. Visit the museum":"例如 參觀博物館","Hotel or rental":"飯店或民宿","Place or activity":"地點或活動","Places nearby":"附近的地點","Reminders for the day":"當天的提醒","Restaurant, hotel, ticket…":"餐廳、飯店、票券…","Search or type":"搜尋或輸入","Time, party size, booking code":"時間、人數、訂位代號","Where are you today?":"今天在哪裡?","Write a note…":"寫點筆記…","Your name":"你的名字","+ Add":"+ 新增","+ Add stop":"+ 新增行程","+1 day":"+1 天","Accommodation":"住宿","Account":"帳號","Add":"新增","Add photo":"新增照片","Add to schedule":"加入行程","Add trip":"新增航班","Airline":"航空公司","AM":"上午","Area":"地區","Arrival day":"抵達日","Arrive":"抵達","Can edit":"可編輯","Check-in":"入住","Check-out":"退房","Code":"航班號","Confirm":"確認","Date":"日期","Dates":"日期","days":"天","Delete":"刪除","Delete idea":"刪除想法","Delete this note":"刪除這則筆記","Depart":"出發","Departs":"出發日","Departure":"去程","Destination":"目的地","Details":"詳細資訊","Direction":"方向","Double-tap a day's banner to edit the day. Tap a stop to edit it.":"連點兩下當天的橫幅可編輯當天內容,點行程項目可編輯該項目。","Double-tap to add details":"連點兩下新增內容","Edit idea":"編輯想法","Edit reservation":"編輯預約","Edit stay":"編輯住宿","Edit stop":"編輯行程項目","End":"結束","Food":"美食","From":"出發地","hrs":"時","Idea":"想法","Ideas":"想法","Join trip":"加入旅程","Language":"語言","Leave trip":"離開旅程","min":"分","Name":"名稱","Nearby":"周邊","New idea":"新增想法","New reservation":"新增預約","New stay":"新增住宿","Night":"晚上","Note":"備註","Notes":"筆記","Open in Google Maps":"在 Google 地圖開啟","Opening your trip…":"正在開啟你的旅程…","Other":"其他","Owner":"擁有者","People":"成員","Photo":"照片","Photo or GIF":"照片或 GIF","Pin places you might want to go. Tap a card to edit.":"先收藏想去的地方,之後再決定。點卡片可編輯。","Please enter your name.":"請輸入你的名字。","Please rotate your phone to portrait.":"請將手機轉回直式。","PM":"下午","Remove":"移除","Remove flight":"移除航班","Reservations":"預約","Return":"回程","Revoke":"撤銷","Same day":"當天","Save":"儲存","Save trip":"儲存旅程","Saved on this device only.":"資料只存在這台裝置上。","Sign in to back up and share this trip.":"登入後即可備份並分享這趟旅程。","Add your Firebase settings to turn on sync (see README).":"填入 Firebase 設定即可開啟同步(請見 README)。","Schedule on":"排入日期","sec":"秒","Shop":"購物","Sight":"景點","Sign in":"登入","Sign in with Google":"使用 Google 登入","Sign out":"登出","Start":"開始","Swipe left to delete · drag the handle to reorder.":"向左滑動刪除 · 拖曳把手排序。","Sync is still loading…":"同步功能載入中…","Tap again":"再點一次","Time of day":"時段","To":"抵達地","Trip Planner":"旅行規劃","Type":"類型","View only":"僅檢視","What":"內容","Joining…":"加入中…","Still opening… check your connection, then reload.":"仍在開啟中…請檢查網路連線後重新整理。","Cloud sync is unavailable right now. Check your connection.":"目前無法使用雲端同步,請檢查網路連線。","Could not load.":"無法載入。","Loading…":"載入中…","No stays yet. Add a hotel or rental.":"還沒有住宿,新增飯店或民宿吧。","No reservations yet. Add a table, hotel or ticket.":"還沒有預約,新增餐廳、飯店或票券吧。","Add what to pack or book before you leave.":"新增出發前要準備或預訂的事項。","Nothing to pack or do yet":"還沒有待辦事項","Nothing planned yet. Add your first stop below.":"還沒有安排,從下方新增第一個行程吧。","Trip complete":"旅程結束","Photo ready":"照片已選好","Replace photo":"更換照片","Replace photo or GIF":"更換照片或 GIF","Remove banner photo":"移除橫幅照片","Remove photo":"移除照片","This GIF is over 3 MB. Please use a smaller one, for example by shrinking it at ezgif.com.":"這個 GIF 超過 3 MB,請換小一點的檔案,例如到 ezgif.com 壓縮。","This image could not be read. Try a JPEG or PNG.":"無法讀取這張圖片,請改用 JPEG 或 PNG。","Taipei":"台北","Seoul":"首爾","Boston":"波士頓","Tokyo":"東京","Osaka":"大阪","Los Angeles":"洛杉磯","New York":"紐約","San Francisco":"舊金山","London":"倫敦","Bangkok":"曼谷","Chicago":"芝加哥","Salzburg":"薩爾茲堡","or join with a link":"或用連結加入","Paste the link":"貼上連結","Paste the link you were sent.":"請貼上你收到的連結。","You're invited! Enter your name to join this trip.":"你受邀加入這趟旅程!請輸入你的名字。","This trip is private. Sign in, or join with the link you were sent.":"這是私人旅程。請登入,或使用收到的連結加入。","An installed app keeps its own login. Sign in here, or enter your name and paste the link you were sent.":"安裝到主畫面的 app 有獨立的登入狀態。請在這裡登入,或輸入你的名字並貼上收到的連結。","This link is invalid or has been reset.":"這個連結無效或已被重設。","Share link":"分享連結","Guest":"訪客","Copied":"已複製","Copy this link":"請複製這個連結","My trips":"我的旅程","New trip":"新增旅程","Creating…":"建立中…","Deleting…":"刪除中…","Current":"目前","Past":"已結束","Untitled trip":"未命名旅程","No trips yet.":"還沒有旅程。","Delete trip":"刪除旅程","Delete this trip and all of its data? This cannot be undone.":"要刪除這趟旅程和它所有的資料嗎?此動作無法復原。","You can keep up to 20 trips.":"最多可以保留 20 趟旅程。","This trip is no longer available.":"這趟旅程已經不存在了。","Trip name":"旅程名稱","+ New":"+ 新增"};
 const ZHR=[
  [new RegExp('^'+MR+' (\\d+), (\\d{4})$'),(_,m,d,y)=>`${y}年${MON[m]}月${d}日`],
  [new RegExp('^'+MR+' (\\d+) – '+MR+' (\\d+) · (\\d+) days$'),(_,a,b,c,d,n)=>`${MON[a]}月${b}日 – ${MON[c]}月${d}日 · ${n} 天`],
+ [new RegExp('^'+MR+' (\\d+) – '+MR+' (\\d+), (\\d{4})$'),(_,a,b,c,d,y)=>`${y}年${MON[a]}月${b}日 – ${MON[c]}月${d}日`],
+ [new RegExp('^'+MR+' (\\d+), (\\d{4}) – '+MR+' (\\d+), (\\d{4})$'),(_,a,b,y1,c,d,y2)=>`${y1}年${MON[a]}月${b}日 – ${y2}年${MON[c]}月${d}日`],
  [new RegExp('^'+MR+' (\\d+)$'),(_,m,d)=>`${MON[m]}月${d}日`],
  [new RegExp('^(\\d+)/(\\d+) '+WR+'$'),(_,a,b,w)=>`${a}/${b} 週${WK[w]}`],
  [new RegExp('^Day (\\d+) · (\\d+)/(\\d+) '+WR+'$'),(_,n,a,b,w)=>`Day ${n} · ${a}/${b} 週${WK[w]}`],

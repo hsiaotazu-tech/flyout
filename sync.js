@@ -50,6 +50,7 @@ async function openTrip(u,tid){
  if(!m.exists())throw new Error('not a member');
  ctx={tid,uid:u.uid};S.role=m.data().role;S.mode='cloud';S.email=u.email||'';S.pending='';
  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
+ try{localStorage.setItem('trip',tid)}catch(e){}
  F.setDoc(F.doc(db,'users',u.uid),{tripId:tid},{merge:true}).catch(()=>{});
  await new Promise(res=>{
   let first=true;
@@ -66,6 +67,38 @@ async function openTrip(u,tid){
   },e=>{console.warn(e);done()});
  });
 }
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+const ALPHA='23456789ABCDEFGHJKLMNPQRSTUVWXYZ',LINK_LEN=10;     // 32 symbols, no 0/O/1/I: about 50 bits, not guessable
+const mkToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(LINK_LEN)),b=>ALPHA[b%32]).join('');
+const linkOf=t=>location.origin+location.pathname+'#j='+t;
+const parseTok=raw=>{const m=String(raw).match(/[#&?]j=([A-Za-z0-9]+)/),t=(m?m[1]:String(raw).trim()).toUpperCase();return new RegExp('^['+ALPHA+']{'+LINK_LEN+'}$').test(t)?t:null};
+const linkCache={};
+
+async function createTrip(uid,name,dataMap){
+ const tid=rnd(),b1=F.writeBatch(db);
+ b1.set(F.doc(db,'trips',tid),{owner:uid,name,createdAt:F.serverTimestamp()});
+ b1.set(F.doc(db,'trips',tid,'members',uid),{role:'owner',name:(auth.currentUser&&auth.currentUser.displayName)||'',joinedAt:F.serverTimestamp()});
+ b1.set(F.doc(db,'users',uid),{tripId:tid,trips:F.arrayUnion(tid)},{merge:true});
+ await b1.commit();
+ const rows=Object.entries(dataMap);
+ for(let i=0;i<rows.length;i+=100){
+  const b=F.writeBatch(db);
+  rows.slice(i,i+100).forEach(([k,j])=>b.set(F.doc(db,'trips',tid,'data',k),{j,by:uid,t:F.serverTimestamp()}));
+  await b.commit();
+ }
+ return tid;
+}
+async function joinWith(u,name,tok){
+ const bad=new Error('This link is invalid or has been reset.');
+ let c;try{c=await F.getDoc(F.doc(db,'links',tok))}catch(e){throw bad}
+ if(!c.exists())throw bad;
+ const tid=c.data().tid,mref=F.doc(db,'trips',tid,'members',u.uid);
+ try{await F.setDoc(mref,{token:tok,role:'editor',name:String(name).trim().slice(0,30)||'Guest',joinedAt:F.serverTimestamp()})}
+ catch(e){const mm=await F.getDoc(mref).catch(()=>null);if(!(mm&&mm.exists()))throw bad}   // already a member is fine
+ await F.setDoc(F.doc(db,'users',u.uid),{tripId:tid},{merge:true});
+ lsSet('trip',tid);
+ return tid;
+}
 async function cloudInit(){
  const [{initializeApp},au,fs]=await Promise.all([import(FB+'firebase-app.js'),import(FB+'firebase-auth.js'),import(FB+'firebase-firestore.js')]);
  AU=au;F=fs;
@@ -74,19 +107,27 @@ async function cloudInit(){
  try{await au.getRedirectResult(auth)}catch(e){console.warn(e)}
  let u=await new Promise(r=>{const off=au.onAuthStateChanged(auth,x=>{off();r(x)})});
  if(!u)return localInit();
- const ud=await fs.getDoc(fs.doc(db,'users',u.uid));
- if(ud.exists()&&ud.data().tripId)return openTrip(u,ud.data().tripId);
- if(u.isAnonymous)return localInit();
- // first Google sign-in: create the trip from what is on this device
+ // a guest who already joined one trip taps another trip's link: join it with the same name
+ if(S.pending&&u.isAnonymous&&lsGet('guestName')){try{await joinWith(u,lsGet('guestName'),S.pending)}catch(e){console.warn(e)}}
+ const uref=fs.doc(db,'users',u.uid),ud=await fs.getDoc(uref),data=ud.exists()?ud.data():{};
+ const ids=data.trips||(data.tripId?[data.tripId]:[]),want=lsGet('trip');
+ const first=want&&(ids.includes(want)||want===data.tripId)?want:(data.tripId||ids[0]);
+ for(const tid of [first,...ids.filter(x=>x!==first)].filter(Boolean)){
+  try{await openTrip(u,tid);return}
+  catch(e){
+   const gone=e&&(e.code==='permission-denied'||e.message==='not a member');
+   if(!gone)throw e;                                             // offline or a temporary problem: do not forget the trip
+   console.warn('trip unavailable',tid);
+   if(!u.isAnonymous)fs.setDoc(uref,{trips:fs.arrayRemove(tid)},{merge:true}).catch(()=>{});
+   if(lsGet('trip')===tid)lsSet('trip','');
+   S.lost=true;
+  }
+ }
+ if(u.isAnonymous){if(S.lost)S.error='This trip is no longer available.';return localInit()}
+ // first Google sign-in (or no trip left): create a trip from what is on this device
  try{applyRemote(await idbAll())}catch(e){}
- const tid=rnd(),cur=snap(),b1=fs.writeBatch(db);
- b1.set(fs.doc(db,'trips',tid),{owner:u.uid,name:A.get('trip').dest,createdAt:fs.serverTimestamp()});
- b1.set(fs.doc(db,'trips',tid,'members',u.uid),{role:'owner',name:u.displayName||'',joinedAt:fs.serverTimestamp()});
- b1.set(fs.doc(db,'users',u.uid),{tripId:tid},{merge:true});
- await b1.commit();
- const b2=fs.writeBatch(db);
- for(const [k,j] of Object.entries(cur)){b2.set(fs.doc(db,'trips',tid,'data',k),{j,by:u.uid,t:fs.serverTimestamp()});last[k]=j}
- await b2.commit();
+ const cur=snap(),tid=await createTrip(u.uid,A.get('trip').dest,cur);
+ Object.assign(last,cur);
  return openTrip(u,tid);
 }
 async function init(){
@@ -100,7 +141,7 @@ async function init(){
  S.inited=true;A.status();
 }
 
-/* ---- sign-in and sharing (cloud only) ---- */
+/* ---- sign-in, sharing, trips (cloud only) ---- */
 const need=()=>{if(!AU)throw new Error('Cloud sync is unavailable right now. Check your connection.')};
 S.signIn=async()=>{need();const p=new AU.GoogleAuthProvider();
  try{await AU.signInWithPopup(auth,p)}
@@ -110,41 +151,71 @@ S.signIn=async()=>{need();const p=new AU.GoogleAuthProvider();
   throw e}
  location.reload()};
 S.signOut=async()=>{need();await AU.signOut(auth);location.reload()};
-const ALPHA='23456789ABCDEFGHJKLMNPQRSTUVWXYZ',LINK_LEN=10;     // 32 symbols, no 0/O/1/I: about 50 bits, not guessable
-const mkToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(LINK_LEN)),b=>ALPHA[b%32]).join('');
-const linkOf=t=>location.origin+location.pathname+'#j='+t;
-S.revoke=async t=>{await F.deleteDoc(F.doc(db,'links',t)).catch(()=>{});await F.deleteDoc(F.doc(db,'trips',ctx.tid,'invites',t))};
-S.newLink=async()=>{
+const revokeTok=async(tid,t)=>{await F.deleteDoc(F.doc(db,'links',t)).catch(()=>{});await F.deleteDoc(F.doc(db,'trips',tid,'invites',t))};
+S.newLink=async(tid=ctx.tid)=>{
  need();
- const old=(await F.getDocs(F.collection(db,'trips',ctx.tid,'invites'))).docs;
- for(const d of old)await S.revoke(d.id);                       // the previous link stops working
+ for(const d of (await F.getDocs(F.collection(db,'trips',tid,'invites'))).docs)await revokeTok(tid,d.id);   // an older link stops working
  const t=mkToken();
- await F.setDoc(F.doc(db,'links',t),{tid:ctx.tid,by:ctx.uid});
- await F.setDoc(F.doc(db,'trips',ctx.tid,'invites',t),{createdAt:F.serverTimestamp()});
- return linkOf(t);
+ await F.setDoc(F.doc(db,'links',t),{tid,by:ctx.uid});
+ await F.setDoc(F.doc(db,'trips',tid,'invites',t),{createdAt:F.serverTimestamp()});
+ return linkCache[tid]=linkOf(t);
 };
-S.getLink=async()=>{
+S.getLink=async(tid=ctx.tid)=>{
  need();
- const cur=(await F.getDocs(F.collection(db,'trips',ctx.tid,'invites'))).docs.filter(d=>d.id.length===LINK_LEN);
- return cur.length?linkOf(cur[0].id):S.newLink();
+ if(linkCache[tid])return linkCache[tid];
+ const cur=(await F.getDocs(F.collection(db,'trips',tid,'invites'))).docs.filter(d=>d.id.length===LINK_LEN);
+ return linkCache[tid]=cur.length?linkOf(cur[0].id):await S.newLink(tid);
 };
 S.join=async(name,raw)=>{
  need();
- const bad=new Error('This link is invalid or has been reset.');
- const m=String(raw).match(/[#&?]j=([A-Za-z0-9]+)/),tok=(m?m[1]:String(raw).trim()).toUpperCase();
- if(!new RegExp('^['+ALPHA+']{'+LINK_LEN+'}$').test(tok))throw bad;
+ const tok=parseTok(raw);if(!tok)throw new Error('This link is invalid or has been reset.');
  const u=auth.currentUser||(await AU.signInAnonymously(auth)).user;
- let c;try{c=await F.getDoc(F.doc(db,'links',tok))}catch(e){throw bad}
- if(!c.exists())throw bad;
- const tid=c.data().tid,mref=F.doc(db,'trips',tid,'members',u.uid);
- try{await F.setDoc(mref,{token:tok,role:'editor',name:String(name).trim().slice(0,30)||'Guest',joinedAt:F.serverTimestamp()})}
- catch(e){const mm=await F.getDoc(mref).catch(()=>null);if(!(mm&&mm.exists()))throw bad}   // already a member is fine
- await F.setDoc(F.doc(db,'users',u.uid),{tripId:tid},{merge:true});
+ await joinWith(u,name,tok);
+ lsSet('guestName',String(name).trim().slice(0,30));
  history.replaceState(null,'',location.pathname+location.search);
  location.reload();
 };
 S.members=async()=>(await F.getDocs(F.collection(db,'trips',ctx.tid,'members'))).docs.map(d=>({uid:d.id,role:d.data().role,name:d.data().name}));
 S.kick=uid=>F.deleteDoc(F.doc(db,'trips',ctx.tid,'members',uid));
-S.leave=async()=>{await F.deleteDoc(F.doc(db,'trips',ctx.tid,'members',ctx.uid));await F.deleteDoc(F.doc(db,'users',ctx.uid)).catch(()=>{});location.reload()};
+S.leave=async()=>{await F.deleteDoc(F.doc(db,'trips',ctx.tid,'members',ctx.uid));await F.deleteDoc(F.doc(db,'users',ctx.uid)).catch(()=>{});lsSet('trip','');location.reload()};
+S.myTrips=async()=>{
+ need();
+ const ud=await F.getDoc(F.doc(db,'users',ctx.uid)),d=ud.exists()?ud.data():{},ids=d.trips||(d.tripId?[d.tripId]:[]),out=[];
+ for(const tid of ids){
+  try{
+   const t=await F.getDoc(F.doc(db,'trips',tid,'data','trip')),v=t.exists()?JSON.parse(t.data().j):(tid===ctx.tid?A.get('trip'):null);
+   const td=await F.getDoc(F.doc(db,'trips',tid)).catch(()=>null);
+   if(v)out.push({tid,dest:v.dest,title:(td&&td.exists()&&td.data().title)||'',start:v.start,end:v.end,current:tid===ctx.tid});
+  }catch(e){}
+ }
+ return out;
+};
+S.renameTrip=async(tid,name)=>{need();await F.setDoc(F.doc(db,'trips',tid),{title:name},{merge:true})};   // the list name only; the destination on the overview is untouched
+S.switchTrip=tid=>{lsSet('trip',tid);location.reload()};
+S.newTrip=async()=>{
+ need();
+ const ud=await F.getDoc(F.doc(db,'users',ctx.uid)),d=ud.exists()?ud.data():{};
+ if((d.trips||(d.tripId?[d.tripId]:[])).length>=20)throw new Error('You can keep up to 20 trips.');
+ const tpl=A.template(),map=Object.fromEntries(Object.entries(tpl).map(([k,v])=>[k,JSON.stringify(v)]));
+ const tid=await createTrip(ctx.uid,tpl.trip.dest,map);
+ lsSet('trip',tid);location.reload();
+};
+S.deleteTrip=async tid=>{
+ need();
+ const wasCurrent=tid===ctx.tid,list=async n=>(await F.getDocs(F.collection(db,'trips',tid,n))).docs;
+ const wipe=async docs=>{for(let i=0;i<docs.length;i+=100){const b=F.writeBatch(db);docs.slice(i,i+100).forEach(d=>b.delete(d.ref));await b.commit()}};
+ await wipe(await list('data'));                                    // content and photo chunks
+ const inv=await list('invites');for(const d of inv)await F.deleteDoc(F.doc(db,'links',d.id)).catch(()=>{});await wipe(inv);
+ await wipe((await list('members')).filter(d=>d.id!==ctx.uid));    // guests lose access
+ await F.deleteDoc(F.doc(db,'trips',tid));
+ await F.deleteDoc(F.doc(db,'trips',tid,'members',ctx.uid));         // the owner's own membership goes last
+ await F.setDoc(F.doc(db,'users',ctx.uid),{trips:F.arrayRemove(tid)},{merge:true});
+ delete linkCache[tid];
+ if(wasCurrent){
+  const rest=(((await F.getDoc(F.doc(db,'users',ctx.uid))).data()||{}).trips||[]).filter(x=>x!==tid);
+  if(rest.length){lsSet('trip',rest[0]);await F.setDoc(F.doc(db,'users',ctx.uid),{tripId:rest[0]},{merge:true});location.reload()}
+  else await S.newTrip();
+ }
+};
 
 init();
