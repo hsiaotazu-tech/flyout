@@ -304,6 +304,19 @@ input,select,textarea{font-size:16px!important}
 #topfill{position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60;pointer-events:none}
 #rot{display:none;position:fixed;inset:0;z-index:99;background:var(--bg);color:var(--ink);flex-direction:column;align-items:center;justify-content:center;gap:12px;font:500 15px 'DM Sans',sans-serif}
 @media (orientation:landscape) and (max-height:520px){#rot{display:flex}}
+/* v20: join code, language, people list */
+.lock .in.cd4{letter-spacing:.35em;text-transform:uppercase;font-weight:700}
+.codebig{font:700 40px ui-monospace,Menlo,monospace;letter-spacing:.2em;text-align:center;padding:12px 0 4px}
+.mono{font-family:ui-monospace,Menlo,monospace;letter-spacing:.12em}
+/* v21 */
+/* Gen Jyuu Gothic (源柔ゴシック, SIL OFL 1.1), subset to the 16 characters of the Chinese headings */
+@font-face{font-family:'GenJyuu';font-weight:700;font-style:normal;font-display:swap;src:url(data:font/woff2;base64,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) format('woff2');unicode-range:U+884C,U+7A0B,U+8A2D,U+5B9A,U+5F85,U+8FA6,U+6E05,U+55AE,U+60F3,U+6CD5,U+4F4F,U+5BBF,U+7B46,U+8A18,U+9810,U+7D04}
+#left h1,#settings h1,#dc>h1,.hd h2{font-family:'Fraunces','GenJyuu',Georgia,serif}
+.trow{display:flex;align-items:center;justify-content:space-between;margin:18px 0 0}.trow h1{margin:0}
+.lgs{display:flex;background:var(--sage);border-radius:12px;padding:3px}
+.lgs button{border:0;background:none;color:var(--mute);font:700 12px 'DM Sans',sans-serif;padding:6px 10px;border-radius:9px;cursor:pointer}
+.lgs button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.nav button[hidden]{display:none}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 </style>
 </head>
@@ -359,25 +372,30 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
     <p class="sub" id="lk-msg">Opening your trip…</p>
     <div id="lk-in" hidden>
       <div class="tiles" style="--n:1"><button class="tile pri" id="lk-sign"><span>Sign in with Google</span></button></div>
-      <div class="lb">or paste a share link</div>
-      <input class="in" id="lk-link" placeholder="https://…#join=…" autocomplete="off" autocapitalize="off">
+      <div class="lb" id="lk-or">or join with a link</div>
+      <input class="in" id="lk-name" placeholder="Your name" maxlength="30" autocomplete="off">
+      <input class="in" id="lk-link" placeholder="Paste the link" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-top:8px">
       <div class="tiles" style="--n:1"><button class="tile" id="lk-join"><span>Join trip</span></button></div>
-      <p class="sub" id="lk-hint" hidden style="margin-top:14px;font-size:12px">An installed app keeps its own login. Sign in here, or paste the share link you were sent.</p>
+      <p class="sub" id="lk-hint" hidden style="margin-top:14px;font-size:12px">An installed app keeps its own login. Sign in here, or enter your name and paste the link you were sent.</p>
     </div>
   </div>
 </div>
 
+<datalist id="airlines"></datalist>
 <div id="topfill"></div>
 <div id="rot"><div id="rot-ic"></div><p>Please rotate your phone to portrait.</p></div>
 <script>
 let RO=false;
+let LANG=(()=>{try{return localStorage.getItem('lang')}catch(e){return null}})()||((navigator.language||'').toLowerCase().startsWith('zh')?'zh':'en');
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const ICO={trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',imgoff:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/><path d="M3 3l18 18"/>',pen:'<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',grip:'<path d="M5 7h14M5 12h14M5 17h14"/>',dots:'<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/>',fork:'<path d="M6 3v6a2 2 0 0 0 4 0V3M8 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 6.5V13H17"/>',sight:'<path d="M3 20h18M5 20V10M9.5 20V10M14.5 20V10M19 20V10M3 10l9-6 9 6z"/>',bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',spark:'<path d="M12 3l2 6 6 3-6 3-2 6-2-6-6-3 6-3z"/>',note:'<path d="M6 3.5h9l4 4V20.5H6z"/><path d="M14.5 3.5V8H19M9 12h7M9 16h7"/>',cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.9A6 6 0 0 1 18 9.6 4.2 4.2 0 0 1 17.5 18z"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/>',out:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',down:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',up:'<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>',phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>'};
+const ICO={trash:'<path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M9 7V4h6v3"/>',check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',plus:'<path d="M12 5v14M5 12h14"/>',cal:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',imgoff:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/><path d="M3 3l18 18"/>',pen:'<path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14.5 6.5l3 3"/>',grip:'<path d="M5 7h14M5 12h14M5 17h14"/>',dots:'<path d="M5 12h.01M12 12h.01M19 12h.01" stroke-width="3"/>',fork:'<path d="M6 3v6a2 2 0 0 0 4 0V3M8 11v10"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 6.5V13H17"/>',sight:'<path d="M3 20h18M5 20V10M9.5 20V10M14.5 20V10M19 20V10M3 10l9-6 9 6z"/>',bag:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',spark:'<path d="M12 3l2 6 6 3-6 3-2 6-2-6-6-3 6-3z"/>',note:'<path d="M6 3.5h9l4 4V20.5H6z"/><path d="M14.5 3.5V8H19M9 12h7M9 16h7"/>',cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-8.9A6 6 0 0 1 18 9.6 4.2 4.2 0 0 1 17.5 18z"/>',link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1"/>',out:'<path d="M9 4H5v16h4M16 8l4 4-4 4M20 12H9"/>',down:'<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',up:'<path d="M12 16V5M7 9l5-5 5 5M5 20h14"/>',user:'<circle cx="12" cy="8" r="3.6"/><path d="M5 20a7 7 0 0 1 14 0"/>',phone:'<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',key:'<circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5L20 3M16 7l3 3"/>'};
 const ic=(n,z=18)=>`<svg class="ic" width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[n]||''}</svg>`;
 const PLANE='<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>';
 const CITY={TPE:'Taipei',ICN:'Seoul',BOS:'Boston',NRT:'Tokyo',KIX:'Osaka',LAX:'Los Angeles',JFK:'New York',SFO:'San Francisco',LHR:'London',BKK:'Bangkok',ORD:'Chicago',SZG:'Salzburg'};
-const AIR=['Select','Korean Air','EVA Air','China Airlines','STARLUX','Delta','United','British Airways','Other'];
+const AIRZH=[["Korean Air","大韓航空"],["Asiana Airlines","韓亞航空"],["EVA Air","長榮航空"],["China Airlines","中華航空"],["STARLUX Airlines","星宇航空"],["Mandarin Airlines","華信航空"],["UNI Air","立榮航空"],["Cathay Pacific","國泰航空"],["Hong Kong Airlines","香港航空"],["Air Macau","澳門航空"],["Singapore Airlines","新加坡航空"],["Japan Airlines","日本航空"],["ANA (All Nippon Airways)","全日空"],["Thai Airways","泰國航空"],["Bangkok Airways","曼谷航空"],["Malaysia Airlines","馬來西亞航空"],["Garuda Indonesia","印尼鷹航"],["Philippine Airlines","菲律賓航空"],["Vietnam Airlines","越南航空"],["Air China","中國國際航空"],["China Eastern","中國東方航空"],["China Southern","中國南方航空"],["Hainan Airlines","海南航空"],["Xiamen Airlines","廈門航空"],["Air India","印度航空"],["Qantas","澳洲航空"],["Air New Zealand","紐西蘭航空"],["Fiji Airways","斐濟航空"],["Emirates","阿聯酋航空"],["Qatar Airways","卡達航空"],["Etihad Airways","阿提哈德航空"],["Turkish Airlines","土耳其航空"],["Saudia","沙烏地阿拉伯航空"],["El Al","以色列航空"],["Ethiopian Airlines","衣索比亞航空"],["South African Airways","南非航空"],["Kenya Airways","肯亞航空"],["EgyptAir","埃及航空"],["Royal Air Maroc","摩洛哥皇家航空"],["Lufthansa","漢莎航空"],["British Airways","英國航空"],["Air France","法國航空"],["KLM","荷蘭皇家航空"],["Finnair","芬蘭航空"],["SAS Scandinavian","北歐航空"],["Swiss","瑞士國際航空"],["Austrian Airlines","奧地利航空"],["Brussels Airlines","布魯塞爾航空"],["Iberia","西班牙國家航空"],["TAP Air Portugal","葡萄牙航空"],["ITA Airways","義大利航空"],["LOT Polish Airlines","波蘭航空"],["Aer Lingus","愛爾蘭航空"],["Virgin Atlantic","維珍航空"],["Icelandair","冰島航空"],["Aegean Airlines","愛琴海航空"],["Czech Airlines","捷克航空"],["Delta Air Lines","達美航空"],["United Airlines","聯合航空"],["American Airlines","美國航空"],["Alaska Airlines","阿拉斯加航空"],["Hawaiian Airlines","夏威夷航空"],["Air Canada","加拿大航空"],["Aeromexico","墨西哥航空"],["Copa Airlines","巴拿馬航空"],["Avianca","哥倫比亞航空"],["LATAM Airlines","南美航空"],["Tigerair Taiwan","台灣虎航"],["Scoot","酷航"],["Jetstar","捷星航空"],["AirAsia","亞洲航空"],["AirAsia X","亞洲航空X"],["Thai AirAsia","泰國亞洲航空"],["Thai Lion Air","泰國獅子航空"],["Lion Air","獅子航空"],["Batik Air","巴迪克航空"],["Cebu Pacific","宿霧太平洋航空"],["VietJet Air","越捷航空"],["Bamboo Airways","越竹航空"],["Peach","樂桃航空"],["ZIPAIR","ZIPAIR"],["Spring Japan","春秋航空日本"],["Spring Airlines","春秋航空"],["Jeju Air","濟州航空"],["Jin Air","真航空"],["T'way Air","德威航空"],["Air Busan","釜山航空"],["Air Seoul","首爾航空"],["Eastar Jet","易斯達航空"],["Air Premia","Air Premia"],["HK Express","香港快運"],["IndiGo","靛藍航空"],["SpiceJet","香料航空"],["Flydubai","杜拜航空"],["Air Arabia","阿拉伯航空"],["Ryanair","瑞安航空"],["easyJet","易捷航空"],["Wizz Air","威茲航空"],["Vueling","伏林航空"],["Eurowings","歐洲之翼"],["Transavia","川斯沃航空"],["Norwegian","挪威航空"],["Pegasus Airlines","飛馬航空"],["Southwest Airlines","西南航空"],["JetBlue","捷藍航空"],["Frontier Airlines","邊疆航空"],["Allegiant Air","艾利金特航空"],["WestJet","西捷航空"],["Flair Airlines","Flair Airlines"],["Volaris","Volaris"],["Viva Aerobus","Viva Aerobus"],["JetSMART","JetSMART"],["Sky Airline","Sky Airline"],["Norse Atlantic Airways","Norse Atlantic"]];
+const AIRMAP=Object.fromEntries(AIRZH.filter(a=>a[1]&&a[1]!==a[0]));
+const airL=n=>LANG==='zh'&&AIRMAP[n]?AIRMAP[n]:n;
 const pad=n=>String(n).padStart(2,'0');
 const pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
 const ad=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
@@ -387,7 +405,7 @@ const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 /* ---------- Trip ---------- */
 const t0=new Date();t0.setDate(t0.getDate()+30);
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-const T={dest:'My Trip',start:iso(t0),end:iso(ad(t0,6)),f:[{al:'Select',code:'',from:'TPE',to:'NRT',dep:'09:00',arr:'13:00',p:0,dir:0,o:0},{al:'Select',code:'',from:'NRT',to:'TPE',dep:'15:00',arr:'18:00',p:0,dir:1,o:0}]};
+const T={dest:'My Trip',start:iso(t0),end:iso(ad(t0,6)),f:[{al:'',code:'',from:'TPE',to:'NRT',dep:'09:00',arr:'13:00',p:0,dir:0,o:0},{al:'',code:'',from:'NRT',to:'TPE',dep:'15:00',arr:'18:00',p:0,dir:1,o:0}]};
 const LAND=[[0,[[5,12],[20,28],[46,55]]],[1,[[4,14],[17,28],[44,63]]],[2,[[2,18],[19,26],[31,36],[40,63]]],[3,[[2,17],[19,24],[30,40],[41,63]]],[4,[[2,18],[28,63]]],[5,[[4,18],[28,63]]],[6,[[4,17],[28,62]]],[7,[[5,17],[29,62]]],[8,[[6,16],[29,60]]],[9,[[7,14],[29,50],[52,58]]],[10,[[8,12],[29,48],[52,57]]],[11,[[9,13],[19,26],[29,43],[53,55]]],[12,[[19,27],[30,42],[52,56]]],[13,[[18,27],[31,42],[54,58]]],[14,[[19,27],[32,41],[55,60]]],[15,[[19,26],[33,41],[57,61]]],[16,[[20,26],[34,40],[52,60]]],[17,[[20,26],[34,40],[51,60]]],[18,[[20,25],[35,39],[51,60]]],[19,[[20,24],[36,39],[52,59]]],[20,[[20,23],[53,58]]],[21,[[20,23]]],[22,[[20,22]]]];
 $('#map').innerHTML=LAND.map(([r,rs])=>rs.map(([a,b])=>{let o='';for(let c=a;c<=b;c++)o+=`<circle cx="${c*6+3}" cy="${r*6+3}" r="1.9" fill="currentColor"/>`;return o}).join('')).join('');
 
@@ -421,7 +439,7 @@ function drawHero(){
  const fa=L[0].d,la=L[L.length-1].d;$('#dr').textContent=mf(fa)+' – '+mf(la)+' · '+(Math.round((la-fa)/864e5)+1)+' days';
  const[hh,mm]=L[0].dep.split(':').map(Number),f0=L[0].d;
  CD={tgt:new Date(f0.getFullYear(),f0.getMonth(),f0.getDate(),hh,mm),s:pd(T.start),e:pd(T.end)};tick();
- const al=f=>esc(f.al==='Select'?'':f.al);
+ const al=f=>esc(f.al==='Select'?'':airL(f.al));
  if(L.length>2){
   sk=Math.min(sk,L.length-1);
   $('#fl').innerHTML=`<div class="stk" id="stk">${L.map(f=>`<div class="sc"><div class="fi">${PL(45)}</div><div class="sr"><b>${f.from}–${f.to}</b><span>${al(f)} ${esc(f.code)}</span></div><div class="t">${md(f.d)} ${f.dep}<br>${md(f.r)} ${f.arr}</div></div>`).join('')}</div><div class="skh" id="skh"></div>`;
@@ -430,7 +448,7 @@ function drawHero(){
 }
 
 /* ---------- Settings modal ---------- */
-const sel=(id,opts,v)=>`<select class="in" id="${id}" style="appearance:none">${opts.map(o=>`<option ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
+const sel=(id,opts,v)=>`<select class="in" id="${id}" style="appearance:none">${opts.map(o=>`<option value="${esc(o)}" ${o===v?'selected':''}>${o}</option>`).join('')}</select>`;
 const open=(h,f)=>{if(RO&&!f)return;$('#sheet').innerHTML=h;$('#ov').classList.add('on')};
 const close=()=>$('#ov').classList.remove('on');
 $('#ov').onclick=e=>{if(e.target.id==='ov')close()};
@@ -444,7 +462,7 @@ function tripForm(){
  <div class="g2"><div><div class="lb">Start</div>${dtf('d_s','date',draft.start)}</div><div><div class="lb">End</div>${dtf('d_e','date',draft.end)}</div></div>
  <div class="seg">${tabs}</div>
  <div class="panel"><div class="g2">
- <div><div class="lb">Airline</div>${sel('f_al',AIR,f.al)}</div><div><div class="lb">Code</div><input class="in" id="f_code" value="${esc(f.code)}"></div>
+ <div><div class="lb">Airline</div><input class="in" id="f_al" list="airlines" value="${esc(f.al==='Select'?'':f.al)}" placeholder="Search or type" autocomplete="off"></div><div><div class="lb">Code</div><input class="in" id="f_code" value="${esc(f.code)}"></div>
  <div><div class="lb">From</div>${sel('f_from',codes,f.from)}</div><div><div class="lb">To</div>${sel('f_to',codes,f.to)}</div>
  <div><div class="lb">Depart</div>${dtf('f_dep','time',f.dep)}</div><div><div class="lb">Arrive</div>${dtf('f_arr','time',f.arr)}</div>
  ${x?`<div><div class="lb">Direction</div>${sel('f_dir',['Departure','Return'],f.dir?'Return':'Departure')}</div><div><div class="lb">Departs</div>${sel('f_o',['Same day','+1 day'],f.o?'+1 day':'Same day')}</div>`:''}
@@ -475,9 +493,22 @@ $('#route').addEventListener('click',e=>{if(e.target.closest('.pl'))editTrip()})
 $('#route').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('.pl')){e.preventDefault();editTrip()}});
 
 /* ---------- Sheets ---------- */
-function rd(id,cb){const f=$('#'+id).files[0];if(!f)return cb('');
- if(f.type==='image/gif'&&id==='e_f'){if(f.size>600*1024){alert('This GIF is too large ('+Math.round(f.size/1024)+' KB). Please use one under 600 KB, for example by shrinking it at ezgif.com.');return cb('')}const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f);return}
- const W=id==='i_f'?520:900,im=new Image(),u=URL.createObjectURL(f);im.onload=()=>{const r=Math.min(1,W/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);cb(c.toDataURL('image/jpeg',.72))};im.onerror=()=>cb('');im.src=u}
+const CH=700000,IMGC={};
+const rid=()=>Math.random().toString(36).slice(2,10);
+function storeImage(durl){const id=rid(),n=Math.ceil(durl.length/CH);for(let k=0;k<n;k++)IMGC['img_'+id+'_'+k]=durl.slice(k*CH,(k+1)*CH);return id+'.'+n}
+function imgUrl(ref){if(!ref)return '';if(ref.startsWith('data:'))return ref;const[id,n]=ref.split('.');let o='';for(let k=0;k<+n;k++){const c=IMGC['img_'+id+'_'+k];if(c==null)return '';o+=c}return o}
+const imgRefs=()=>[...ideas.map(x=>x.img),...days.map(d=>d.img)].filter(r=>r&&!r.startsWith('data:'));
+function rd(id,cb){
+ const f=$('#'+id).files[0];if(!f)return cb('');
+ if(f.type==='image/gif'&&id==='e_f'){
+  if(f.size>3*1024*1024){alert(L('This GIF is over 3 MB. Please use a smaller one, for example by shrinking it at ezgif.com.'));return cb('')}
+  const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f);return}
+ const W0=id==='e_f'?1000:600,MAX=id==='e_f'?380000:140000,im=new Image(),u=URL.createObjectURL(f);
+ im.onload=()=>{let w=W0,q=.8,out='';
+  for(let k=0;k<8;k++){const r=Math.min(1,w/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*r);c.height=Math.round(im.height*r);c.getContext('2d').drawImage(im,0,0,c.width,c.height);out=c.toDataURL('image/jpeg',q);if(out.length<=MAX)break;if(q>.55)q-=.1;else w=Math.round(w*.8)}
+  URL.revokeObjectURL(u);cb(out)};
+ im.onerror=()=>{URL.revokeObjectURL(u);alert(L('This image could not be read. Try a JPEG or PNG.'));cb('')};
+ im.src=u}
 function sheet(title,fields,onSave,onDel,dlab,extra){
  const acts=[...(extra||[]),...(onDel?[{l:dlab||'Delete',fn:onDel,cf:1,ic:'trash'}]:[])],n=(fields.length?1:0)+acts.length;
  const ctl=f=>f.o?sel(f.id,f.o,f.v):f.file?`<label class="in pk" data-l="${f.l}">${f.l}<input type="file" accept="image/*" id="${f.id}" hidden></label>`:`<input class="in" id="${f.id}" value="${esc(f.v||'')}" placeholder="${f.p||''}">`;
@@ -495,7 +526,7 @@ const EM={Food:['fork','#f1d9c4'],Sight:['sight','#cfdccb'],Shop:['bag','#d8cfe6
 const ideas=[];
 function drawIdeas(){
  const R=['-1.5deg','1deg','-.5deg','1.5deg'];
- $('#ideas').innerHTML=ideas.map((x,i)=>{const m=EM[x.c];return `<div class="idea" data-i="${i}" style="--r:${R[i%4]}"><div class="im" style="background-color:${m[1]};color:#2f5d50;${x.img?`background-image:url(${x.img})`:''}">${x.img?'':ic(m[0],34)}</div><b>${esc(x.t)}</b><span class="sub">${esc(x.s||x.c)}</span></div>`}).join('');
+ $('#ideas').innerHTML=ideas.map((x,i)=>{const m=EM[x.c],u=imgUrl(x.img);return `<div class="idea" data-i="${i}" style="--r:${R[i%4]}"><div class="im" style="background-color:${m[1]};color:#2f5d50;${u?`background-image:url(${u})`:''}">${u?'':ic(m[0],34)}</div><b>${esc(x.t)}</b><span class="sub">${esc(x.s||x.c)}</span></div>`}).join('');
 }
 function ideaSheet(i){
  const x=i==null?{t:'',s:'',c:'Food',img:''}:ideas[i],dopt=days.map((d,k)=>'Day '+(k+1)+' · '+d.date);
@@ -509,7 +540,7 @@ function ideaSheet(i){
  sheet(i==null?'New idea':'Edit idea',F,g=>{
   const t=g('i_t').trim();if(!t){$('#i_t').focus();return false}
   const s=g('i_s').trim(),c=g('i_c');
-  rd('i_f',img=>{const o={t,s,c,img:img||x.img};if(i==null)ideas.push(o);else ideas[i]=o;drawIdeas();if(i==null)$('#ideas').scrollTo({left:1e5,behavior:'smooth'})});
+  rd('i_f',img=>{const o={t,s,c,img:img?storeImage(img):x.img};if(i==null)ideas.push(o);else ideas[i]=o;drawIdeas();if(i==null)$('#ideas').scrollTo({left:1e5,behavior:'smooth'})});
  },i==null?null:()=>{ideas.splice(i,1);drawIdeas()},'Delete idea',X);
 }
 $('#addidea').onclick=()=>ideaSheet();
@@ -594,7 +625,7 @@ let act=-1;
 function drawPlan(){
  const pg=$('#plan'),st=pg.scrollTop;
  $('#rail').innerHTML=days.map((d,i)=>`<button class="rb" data-r="${i}" aria-label="Go to day ${i+1}"><b>${i+1}</b><small>${d.date.split(' ')[0]}</small></button>`).join('');
- $('#dc').innerHTML=`<h1 class="serif" style="font-size:26px;margin:18px 0 4px">Itinerary</h1><div class="sub" style="margin-bottom:14px">Double-tap a day's banner to edit the day. Tap a stop to edit it.</div>`+days.map((d,i)=>`<section class="ds" id="d${i}"><div class="bn ${d.img?'w':''}" data-b="${i}" style="${d.img?`background-image:linear-gradient(transparent 30%,rgba(0,0,0,.65)),url(${d.img})`:''}"><div class="bt"><b class="serif">Day ${i+1}</b><span>${d.date}</span></div><div class="ba">${esc(d.area)||'Double-tap to add details'}</div></div>${d.note?`<div class="nb">${ic('note',14)}<span>${esc(d.note)}</span></div>`:''}${d.items.map((x,j)=>`<div class="stop" data-s="${i}-${j}"><div class="time">${x[0]}</div><div class="card"><b style="font-size:14px">${esc(x[1])}</b><span class="pe">${ic('pen',15)}</span></div></div>`).join('')}<button class="addst" data-a="${i}">+ Add stop</button></section>`).join('');
+ $('#dc').innerHTML=`<h1 class="serif" style="font-size:26px;margin:18px 0 4px">Itinerary</h1><div class="sub" style="margin-bottom:14px">Double-tap a day's banner to edit the day. Tap a stop to edit it.</div>`+days.map((d,i)=>`<section class="ds" id="d${i}"><div class="bn ${imgUrl(d.img)?'w':''}" data-b="${i}" style="${imgUrl(d.img)?`background-image:linear-gradient(transparent 30%,rgba(0,0,0,.65)),url(${imgUrl(d.img)})`:''}"><div class="bt"><b class="serif">Day ${i+1}</b><span>${d.date}</span></div><div class="ba">${esc(d.area)||'Double-tap to add details'}</div></div>${d.note?`<div class="nb">${ic('note',14)}<span>${esc(d.note)}</span></div>`:''}${d.items.map((x,j)=>`<div class="stop" data-s="${i}-${j}"><div class="time">${x[0]}</div><div class="card"><b style="font-size:14px">${esc(x[1])}</b><span class="pe">${ic('pen',15)}</span></div></div>`).join('')}<button class="addst" data-a="${i}">+ Add stop</button></section>`).join('');
  $('#rail').style.maxHeight=Math.max(200,pg.clientHeight-28)+'px';
  pg.scrollTop=st;act=-1;setAct();
 }
@@ -610,7 +641,7 @@ function daySheet(i){
  const d=days[i];
  sheet('Day '+(i+1)+' · '+d.date,[{id:'e_a',l:'Area',v:d.area,p:'Where are you today?'},{id:'e_n',l:'Note',v:d.note,p:'Reminders for the day'},{id:'e_f',l:d.img?'Replace photo or GIF':'Photo or GIF',file:1}],g=>{
   const a=g('e_a').trim(),n=g('e_n').trim();
-  rd('e_f',img=>{d.area=a;d.note=n;if(img)d.img=img;drawPlan()});
+  rd('e_f',img=>{d.area=a;d.note=n;if(img)d.img=storeImage(img);drawPlan()});
  },d.img?()=>{d.img='';drawPlan()}:null,'Remove banner photo');
 }
 function stopSheet(i,j){
@@ -641,8 +672,8 @@ function saveSoon(){const s=window.__sync;if(s&&s.commit)s.commit()}
 const STATE=()=>({ideas,stays,resv,checks,notes});
 const redraw=()=>{relabel();drawHero();drawIdeas();drawAcc();drawResv();drawCk();drawNotes();drawPlan()};
 window.__app={
- keys:()=>['trip','ideas','stays','resv','checks','notes',...days.map((_,i)=>'day'+i)],
- get:k=>k==='trip'?T:/^day\d+$/.test(k)?days[+k.slice(3)]:STATE()[k],
+ keys:()=>['trip','ideas','stays','resv','checks','notes',...days.map((_,i)=>'day'+i),...imgRefs().flatMap(r=>{const[id,n]=r.split('.');return Array.from({length:+n},(_,k)=>'img_'+id+'_'+k)})],
+ get:k=>k.startsWith('img_')?IMGC[k]:k==='trip'?T:/^day\d+$/.test(k)?days[+k.slice(3)]:STATE()[k],
  apply(v){
   const done=[];
   if(v.trip){Object.assign(T,v.trip);done.push('trip')}
@@ -650,6 +681,7 @@ window.__app={
   for(const k of Object.keys(st))if(v[k]){
    if(k==='notes'&&document.activeElement&&document.activeElement.closest('#notes')){pendN=v[k];pendBase=JSON.stringify(notes);continue}
    st[k].splice(0,st[k].length,...v[k]);done.push(k)}
+  for(const k of Object.keys(v))if(k.startsWith('img_')){IMGC[k]=v[k];done.push(k)}
   relabel();
   for(const k of Object.keys(v)){const m=k.match(/^day(\d+)$/);if(m){const i=+m[1];while(days.length<=i)days.push(blank());days[i]=Object.assign(blank(),v[k]);done.push(k)}}
   redraw();return done},
@@ -659,22 +691,25 @@ function drawStatus(){
  const s=window.__sync||{};
  RO=s.role==='viewer'&&s.mode==='cloud';
  document.body.classList.toggle('ro',RO);
+ const guest=s.mode==='cloud'&&s.role!=='owner',gb=document.querySelectorAll('#nav button')[3];
+ if(gb){gb.hidden=guest;if(guest&&pi===3)go(1)}
  $('#nd').dataset.s=RO?'ro':s.error?'err':s.mode==='cloud'?'on':'off';
  const locked=!!s.configured&&s.mode!=='cloud';
  $('#lock').hidden=!locked;
  ['#pager','#nav'].forEach(x=>{$(x).inert=locked});
  if(locked){
   $('#lk-in').hidden=!s.inited;
-  $('#lk-msg').textContent=!s.inited?'Opening your trip…':(s.error||'This trip is private. Sign in, or open the share link you were sent.');
+  $('#lk-msg').textContent=!s.inited?'Opening your trip…':(s.error||(s.pending?"You're invited! Enter your name to join this trip.":'This trip is private. Sign in, or join with the link you were sent.'));
+  $('#lk-link').hidden=!!s.pending;$('#lk-or').hidden=!!s.pending;
   $('#lk-hint').hidden=!(navigator.standalone||(window.matchMedia&&matchMedia('(display-mode: standalone)').matches));
  }
  drawNotes();drawSettings();
 }
 $('#notes').addEventListener('focusout',()=>{if(!pendN)return;const p=pendN;pendN=null;if(JSON.stringify(notes)===pendBase){notes.splice(0,notes.length,...p);drawNotes();const s=window.__sync;s&&s.mark&&s.mark('notes',JSON.stringify(p))}});
 
-/* ---------- Settings page (sync, sharing, backup) ---------- */
+/* ---------- Settings page (language, share link, people) ---------- */
 const tl=(a,i,l,c)=>`<button class="tile ${c?'dng':''}" data-act="${a}"><i>${ic(i)}</i><span>${l}</span></button>`;
-const mrow=(l,b)=>`<div class="mrow"><div>${l}</div>${b.map(x=>`<button class="tile ${x[3]?'dng':''}" data-act="${x[0]}" data-v="${esc(x[1])}"><span>${x[2]}</span></button>`).join('')}</div>`;
+const mrow=(l,b)=>`<div class="mrow"><div>${l}</div>${b.map(x=>`<button class="tile dng" data-act="${x[0]}" data-v="${esc(x[1])}"><span>${x[2]}</span></button>`).join('')}</div>`;
 const amsg=t=>{const m=$('#acm');if(m)m.textContent=t};
 const card=(t,h)=>`<div class="lb" style="text-align:left;margin:22px 0 8px">${t}</div><div class="card">${h}</div>`;
 function drawSettings(){
@@ -683,47 +718,51 @@ function drawSettings(){
  if(!s)st='Sync is still loading…';
  else if(s.mode==='cloud'){
   const own=s.role==='owner';
-  st=own?'Signed in as '+(s.email||'owner')+'. Changes sync automatically.':'You joined this trip as '+(s.role==='editor'?'an editor':'a viewer')+'.';
+  st=own?'Signed in as '+(s.email||'owner'):'You joined this trip as '+(s.role==='editor'?'an editor':'a viewer')+'.';
   acct=`<div class="tiles" style="--n:1">${own?tl('signout','out','Sign out'):tl('leave','out','Leave trip',1)}</div>`;
   if(own){
-   share=card('Share this trip',`<p class="sub" style="margin:0 0 10px">Anyone with a link can open this trip without signing in.</p><div class="tiles" style="--n:2;margin-top:0">${tl('edit','link','Edit link')}${tl('view','link','View link')}</div><div id="alk"></div>`);
-   people=card('Links &amp; people','<div id="slist"><p class="empty">Loading…</p></div>');
+   share=card('Share this trip',`<p class="sub" style="margin:0 0 10px">Share this trip! Open the link and enter your name to join.</p><div class="tiles" style="--n:2;margin-top:0">${tl('share','link','Share link')}${tl('newlink','link','New link',1)}</div><div id="alk"></div>`);
+   people=card('People','<div id="slist"><p class="empty">Loading…</p></div>');
   }
  }else{
   st='Saved on this device only.'+(s.configured?' Sign in to back up and share this trip.':' Add your Firebase settings to turn on sync (see README).');
   if(s.configured)acct=`<div class="tiles" style="--n:1">${tl('signin','user','Sign in')}</div>`;
  }
  if(s&&s.error)st=s.error+' '+st;
- const canImport=!s||s.mode!=='cloud'||s.role==='owner';
- el.innerHTML=`<h1 class="serif" style="font-size:26px;margin:18px 0 0">Settings</h1>`+card('Account',`<p class="sub" id="acm" style="margin:0 0 12px">${esc(st)}</p>${acct}`)+share+people+card('Backup',`<div class="tiles" style="--n:2;margin-top:0">${tl('export','down','Export')}${canImport?tl('import','up','Import'):''}</div>`);
+ el.innerHTML=`<div class="trow"><h1 class="serif" style="font-size:26px">Settings</h1><div class="lgs" role="group" aria-label="Language"><button data-lang="en" class="${LANG==='en'?'on':''}">EN</button><button data-lang="zh" class="${LANG==='zh'?'on':''}">中文</button></div></div>`+card('Account',`<p class="sub" id="acm" style="margin:0 0 12px">${esc(st)}</p>${acct}`)+share+people;
  loadPeople();
 }
 async function loadPeople(){
  const s=window.__sync,box=$('#slist');
  if(!box||!s||s.mode!=='cloud'||s.role!=='owner')return;
  try{
-  const [inv,mem]=await Promise.all([s.invites(),s.members()]);
-  box.innerHTML=`<div class="lb" style="text-align:left;margin:0 0 4px">Share links</div>${inv.length?inv.map(i=>mrow('<b>'+(i.role==='editor'?'Can edit':'View only')+'</b><div class="sub">…'+i.id.slice(-4)+'</div>',[['copy',i.link,'Copy'],['rev',i.id,'Revoke',1]])).join(''):'<p class="empty" style="padding:4px 0">No active links.</p>'}<div class="lb" style="text-align:left;margin:14px 0 4px">People</div>${mem.map(m=>mrow('<b>'+esc(m.name||'Guest')+'</b><div class="sub">'+m.role+'</div>',m.role==='owner'?[]:[['kick',m.uid,'Remove',1]])).join('')}`;
- }catch(e){box.innerHTML='<p class="empty">Could not load links.</p>'}
+  const mem=await s.members();
+  box.innerHTML=mem.map(m=>mrow('<b>'+esc(m.name||'Guest')+'</b><div class="sub">'+(m.role==='owner'?'Owner':'Guest')+'</div>',m.role==='owner'?[]:[['kick',m.uid,'Remove']])).join('');
+ }catch(e){box.innerHTML='<p class="empty">Could not load.</p>'}
 }
-async function shareLink(l,edit){
+async function shareLink(l){
  $('#alk').innerHTML=`<input class="in" readonly id="lk" value="${esc(l)}" style="margin-top:10px"><p class="sub" id="alm" style="margin:8px 0 0"></p>`;
  const k=$('#lk');k.focus();k.select();
- let ok=false;try{await navigator.clipboard.writeText(l);ok=true}catch(e){}
- $('#alm').textContent=(ok?'Link copied.':'Press and hold the link to copy.')+(edit===true?' Anyone with it can edit this trip.':edit===false?' Anyone with it can view this trip.':'');
+ let note='Press and hold the link to copy.';
+ try{
+  if(navigator.share){await navigator.share({title:'Trip Planner',text:L('Share this trip! Open the link and enter your name to join.'),url:l});note=''}
+  else{await navigator.clipboard.writeText(l);note='Link copied.'}
+ }catch(e){
+  if(e&&e.name==='AbortError')note='';
+  else{try{await navigator.clipboard.writeText(l);note='Link copied.'}catch(_){}}
+ }
+ $('#alm').textContent=note;
 }
 $('#settings').addEventListener('click',async e=>{
+ const lg=e.target.closest('[data-lang]');if(lg){setLang(lg.dataset.lang);return}
  const b=e.target.closest('[data-act]');if(!b)return;
  const a=b.dataset.act,v=b.dataset.v,s=window.__sync;
  const conf=()=>{if(b.dataset.c)return true;b.dataset.c=1;b.classList.add('arm');b.querySelector('span').textContent='Tap again';return false};
- if(a==='export'){const o={app:'trip-planner',v:1,data:Object.fromEntries(window.__app.keys().map(k=>[k,window.__app.get(k)]))};const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([JSON.stringify(o,null,1)],{type:'application/json'}));l.download='trip-planner-backup.json';l.click();return}
- if(a==='import'){const i=document.createElement('input');i.type='file';i.accept='.json,application/json';i.onchange=async()=>{try{const o=JSON.parse(await i.files[0].text());if(!o||!o.data||!o.data.trip)throw new Error('This is not a Trip Planner backup.');window.__app.apply(o.data);s&&s.rebase&&s.rebase();amsg('Imported.')}catch(err){amsg(err.message)}};i.click();return}
- if(a==='copy'){try{await navigator.clipboard.writeText(v);b.querySelector('span').textContent='Copied'}catch(err){await shareLink(v,null)}return}
  try{
   if(a==='signin')await s.signIn();
   else if(a==='signout')await s.signOut();
-  else if(a==='edit'||a==='view'){await shareLink(await s.invite(a==='edit'?'editor':'viewer'),a==='edit');loadPeople()}
-  else if(a==='rev'&&conf()){await s.revoke(v);await loadPeople()}
+  else if(a==='share')await shareLink(await s.getLink());
+  else if(a==='newlink'&&conf())await shareLink(await s.newLink());
   else if(a==='kick'&&conf()){await s.kick(v);await loadPeople()}
   else if(a==='leave'&&conf())await s.leave();
  }catch(err){amsg(err.message||String(err))}
@@ -733,18 +772,24 @@ $('#lk-ic').innerHTML=PL(90);
 $('#rot-ic').innerHTML=ic('phone',44);
 try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('portrait').catch(()=>{})}catch(e){}
 $('#lk-sign').onclick=async()=>{try{await window.__sync.signIn()}catch(e){$('#lk-msg').textContent=e.message||String(e)}};
-$('#lk-join').onclick=()=>{const m=$('#lk-link').value.match(/join=(\w+)\.(\w+)\.(editor|viewer)/);if(!m){$('#lk-msg').textContent='That does not look like a share link.';return}location.hash=m[0];location.reload()};
+$('#lk-join').onclick=async()=>{
+ const s=window.__sync,n=$('#lk-name').value.trim(),l=$('#lk-link').value.trim();
+ if(!n){$('#lk-msg').textContent='Please enter your name.';$('#lk-name').focus();return}
+ if(!s.pending&&!l){$('#lk-msg').textContent='Paste the link you were sent.';$('#lk-link').focus();return}
+ $('#lk-msg').textContent='Joining…';
+ try{await s.join(n,l||s.pending)}catch(e){$('#lk-msg').textContent=e.message||String(e)}
+};
 setTimeout(()=>{const s=window.__sync;if(!s||!s.inited)$('#lk-msg').textContent='Still opening… check your connection, then reload.'},8000);
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 
 /* ---------- Bottom nav (only place that switches pages) ---------- */
 const pager=$('#pager'),navb=[...document.querySelectorAll('#nav button')],nav=$('#nav');
 let pi=1;
-const go=(i,b)=>{pi=Math.max(0,Math.min(3,i));pager.scrollTo({left:pi*pager.clientWidth,behavior:b||'smooth'});navb.forEach((x,j)=>x.classList.toggle('on',j===pi));if(pi===0)growAll();if(pi===3)drawSettings()};
+const go=(i,b)=>{pi=Math.max(0,Math.min(navb.filter(b=>!b.hidden).length-1,i));pager.scrollTo({left:pi*pager.clientWidth,behavior:b||'smooth'});navb.forEach((x,j)=>x.classList.toggle('on',j===pi));if(pi===0)growAll();if(pi===3)drawSettings()};
 go(1,'instant');addEventListener('load',()=>go(pi,'instant'));addEventListener('resize',()=>go(pi,'instant'));
 navb.forEach((b,i)=>b.onclick=()=>go(i));
 let nx=null,sw=false;
-const navIdx=x=>{const r=nav.getBoundingClientRect();return Math.max(0,Math.min(navb.length-1,Math.floor((x-r.left)/r.width*navb.length)))};
+const navIdx=x=>{const r=nav.getBoundingClientRect(),n=navb.filter(b=>!b.hidden).length;return Math.max(0,Math.min(n-1,Math.floor((x-r.left)/r.width*n)))};
 nav.onpointerdown=e=>{nx=e.clientX;sw=false};
 nav.onpointermove=e=>{if(nx==null)return;if(Math.abs(e.clientX-nx)>8)sw=true;if(sw){const i=navIdx(e.clientX);if(i!==pi)go(i)}};
 nav.onpointerup=nav.onpointercancel=()=>{nx=null};
@@ -760,6 +805,68 @@ rl.onpointerup=rend;rl.onpointercancel=rend;
 rl.addEventListener('click',e=>{if(rm){e.stopPropagation();e.preventDefault();rm=false}},true);
 rl.addEventListener('wheel',e=>{e.preventDefault();pl.scrollTop+=e.deltaY},{passive:false});
 document.fonts&&document.fonts.ready.then(growAll);
+
+/* ---------- Language (English / 繁體中文) ---------- */
+const MON={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12},WK={Sun:'日',Mon:'一',Tue:'二',Wed:'三',Thu:'四',Fri:'五',Sat:'六'};
+const MR='(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)',WR='(Sun|Mon|Tue|Wed|Thu|Fri|Sat)';
+const ZH={"Checklist":"待辦清單","Checklist and notes":"待辦與筆記","Done":"完成","Drag to reorder":"拖曳排序","Edit trip":"編輯旅程","Itinerary":"行程","New checklist item":"新增待辦事項","Note options":"筆記選項","Overview":"總覽","Settings":"設定","Add an item…":"新增項目…","Area, hours…":"地區、營業時間…","e.g. 2/9":"例如 2/9","e.g. Sat 2/6 – Sun 2/7":"例如 週六 2/6 – 週日 2/7","e.g. Visit the museum":"例如 參觀博物館","Hotel or rental":"飯店或民宿","Place or activity":"地點或活動","Places nearby":"附近的地點","Reminders for the day":"當天的提醒","Restaurant, hotel, ticket…":"餐廳、飯店、票券…","Search or type":"搜尋或輸入","Time, party size, booking code":"時間、人數、訂位代號","Where are you today?":"今天在哪裡?","Write a note…":"寫點筆記…","Your name":"你的名字","+ Add":"+ 新增","+ Add stop":"+ 新增行程","+1 day":"+1 天","Accommodation":"住宿","Account":"帳號","Add":"新增","Add photo":"新增照片","Add to schedule":"加入行程","Add trip":"新增航班","Airline":"航空公司","AM":"上午","Area":"地區","Arrival day":"抵達日","Arrive":"抵達","Can edit":"可編輯","Check-in":"入住","Check-out":"退房","Code":"航班號","Confirm":"確認","Date":"日期","Dates":"日期","days":"天","Delete":"刪除","Delete idea":"刪除想法","Delete this note":"刪除這則筆記","Depart":"出發","Departs":"出發日","Departure":"去程","Destination":"目的地","Details":"詳細資訊","Direction":"方向","Double-tap a day's banner to edit the day. Tap a stop to edit it.":"連點兩下當天的橫幅可編輯當天內容,點行程項目可編輯該項目。","Double-tap to add details":"連點兩下新增內容","Edit idea":"編輯想法","Edit reservation":"編輯預約","Edit stay":"編輯住宿","Edit stop":"編輯行程項目","End":"結束","Food":"美食","From":"出發地","hrs":"時","Idea":"想法","Ideas":"想法","Join trip":"加入旅程","Language":"語言","Leave trip":"離開旅程","min":"分","Name":"名稱","Nearby":"周邊","New idea":"新增想法","New reservation":"新增預約","New stay":"新增住宿","Night":"晚上","Note":"備註","Notes":"筆記","Open in Google Maps":"在 Google 地圖開啟","Opening your trip…":"正在開啟你的旅程…","Other":"其他","Owner":"擁有者","People":"成員","Photo":"照片","Photo or GIF":"照片或 GIF","Pin places you might want to go. Tap a card to edit.":"先收藏想去的地方,之後再決定。點卡片可編輯。","Please enter your name.":"請輸入你的名字。","Please rotate your phone to portrait.":"請將手機轉回直式。","PM":"下午","Remove":"移除","Remove flight":"移除航班","Reservations":"預約","Return":"回程","Revoke":"撤銷","Same day":"當天","Save":"儲存","Save trip":"儲存旅程","Saved on this device only.":"資料只存在這台裝置上。","Sign in to back up and share this trip.":"登入後即可備份並分享這趟旅程。","Add your Firebase settings to turn on sync (see README).":"填入 Firebase 設定即可開啟同步(請見 README)。","Schedule on":"排入日期","sec":"秒","Share this trip":"分享這趟旅程","Shop":"購物","Sight":"景點","Sign in":"登入","Sign in with Google":"使用 Google 登入","Sign out":"登出","Start":"開始","Swipe left to delete · drag the handle to reorder.":"向左滑動刪除 · 拖曳把手排序。","Sync is still loading…":"同步功能載入中…","Tap again":"再點一次","Time of day":"時段","To":"抵達地","Trip Planner":"旅行規劃","Type":"類型","View only":"僅檢視","What":"內容","Joining…":"加入中…","Still opening… check your connection, then reload.":"仍在開啟中…請檢查網路連線後重新整理。","Cloud sync is unavailable right now. Check your connection.":"目前無法使用雲端同步,請檢查網路連線。","Could not load.":"無法載入。","Loading…":"載入中…","No stays yet. Add a hotel or rental.":"還沒有住宿,新增飯店或民宿吧。","No reservations yet. Add a table, hotel or ticket.":"還沒有預約,新增餐廳、飯店或票券吧。","Add what to pack or book before you leave.":"新增出發前要準備或預訂的事項。","Nothing to pack or do yet":"還沒有待辦事項","Nothing planned yet. Add your first stop below.":"還沒有安排,從下方新增第一個行程吧。","Trip complete":"旅程結束","Photo ready":"照片已選好","Replace photo":"更換照片","Replace photo or GIF":"更換照片或 GIF","Remove banner photo":"移除橫幅照片","Remove photo":"移除照片","This GIF is over 3 MB. Please use a smaller one, for example by shrinking it at ezgif.com.":"這個 GIF 超過 3 MB,請換小一點的檔案,例如到 ezgif.com 壓縮。","This image could not be read. Try a JPEG or PNG.":"無法讀取這張圖片,請改用 JPEG 或 PNG。","Taipei":"台北","Seoul":"首爾","Boston":"波士頓","Tokyo":"東京","Osaka":"大阪","Los Angeles":"洛杉磯","New York":"紐約","San Francisco":"舊金山","London":"倫敦","Bangkok":"曼谷","Chicago":"芝加哥","Salzburg":"薩爾茲堡","or join with a link":"或用連結加入","Paste the link":"貼上連結","Paste the link you were sent.":"請貼上你收到的連結。","You're invited! Enter your name to join this trip.":"你受邀加入這趟旅程!請輸入你的名字。","This trip is private. Sign in, or join with the link you were sent.":"這是私人旅程。請登入,或使用收到的連結加入。","An installed app keeps its own login. Sign in here, or enter your name and paste the link you were sent.":"安裝到主畫面的 app 有獨立的登入狀態。請在這裡登入,或輸入你的名字並貼上收到的連結。","This link is invalid or has been reset.":"這個連結無效或已被重設。","Share this trip! Open the link and enter your name to join.":"分享行程！點擊連結輸入名字即可加入","Share link":"分享連結","New link":"新連結","Link copied.":"連結已複製。","Press and hold the link to copy.":"長按連結即可複製。","Guest":"訪客"};
+const ZHR=[
+ [new RegExp('^'+MR+' (\\d+), (\\d{4})$'),(_,m,d,y)=>`${y}年${MON[m]}月${d}日`],
+ [new RegExp('^'+MR+' (\\d+) – '+MR+' (\\d+) · (\\d+) days$'),(_,a,b,c,d,n)=>`${MON[a]}月${b}日 – ${MON[c]}月${d}日 · ${n} 天`],
+ [new RegExp('^'+MR+' (\\d+)$'),(_,m,d)=>`${MON[m]}月${d}日`],
+ [new RegExp('^(\\d+)/(\\d+) '+WR+'$'),(_,a,b,w)=>`${a}/${b} 週${WK[w]}`],
+ [new RegExp('^Day (\\d+) · (\\d+)/(\\d+) '+WR+'$'),(_,n,a,b,w)=>`Day ${n} · ${a}/${b} 週${WK[w]}`],
+ [/^Add stop · Day (\d+)$/,(_,n)=>`新增行程 · Day ${n}`],
+ [/^Go to day (\d+)$/,(_,n)=>`前往 Day ${n}`],
+ [/^Note (\d+)$/,(_,n)=>`筆記 ${n}`],
+ [/^Flight (\d+)$/,(_,n)=>`航班 ${n}`],
+ [/^(\d+) of (\d+) done$/,(_,a,b)=>`已完成 ${a}/${b}`],
+ [/^(\d+) \/ (\d+) · tap to flip$/,(_,a,b)=>`${a} / ${b} · 點一下翻頁`],
+ [/^Upcoming trip to (.+)$/,(_,x)=>`即將出發:${x}`],
+ [/^Now in (.+)$/,(_,x)=>`旅行中:${x}`],
+ [/^Completed trip to (.+)$/,(_,x)=>`已結束的旅程:${x}`],
+ [/^Nearby: (.+)$/,(_,x)=>`周邊:${x}`],
+ [/^Signed in as (.+)$/,(_,x)=>`已登入:${x}`],
+ [/^You joined this trip as (an editor|a viewer)\.$/,(_,r)=>`你以${r==='an editor'?'編輯者':'檢視者'}身分加入了這趟旅程。`],
+ [/^Sync problem \((.+)\)\.$/,(_,x)=>`同步發生問題(${x})。`],
+ [/^Too large to sync: (.+)\. Use a smaller photo\.$/,(_,x)=>`太大無法同步:${x}。請改用較小的照片。`]
+];
+function trCore(c){let o=ZH[c];if(o!=null)return o;for(const[re,f]of ZHR){const m=c.match(re);if(m)return f(...m)}return null}
+function tr(str){
+ if(LANG!=='zh'||!str)return str;
+ const core=str.trim();if(!core)return str;
+ let out=trCore(core);
+ if(out==null&&/\.\s/.test(core)){const ps=core.split(/(?<=\.)\s+/),ts=ps.map(p=>{const x=trCore(p);return x==null?p:x});if(ts.some((x,i)=>x!==ps[i]))out=ts.join('')}
+ return out==null?str:str.replace(core,()=>out);
+}
+const L=tr;
+const TX=new WeakMap(),AT=new WeakMap(),ATTRS=['placeholder','aria-label','title'];
+const skip=n=>{const p=n.parentElement;return !p||/^(SCRIPT|STYLE|TEXTAREA|INPUT)$/.test(p.tagName)};
+function trAttrs(el){
+ for(const a of ATTRS){if(!el.hasAttribute||!el.hasAttribute(a))continue;
+  const m=AT.get(el)||{},rec=m[a];let o=el.getAttribute(a);if(rec&&o===rec.t)o=rec.o;
+  const out=tr(o);if(out!==el.getAttribute(a))el.setAttribute(a,out);m[a]={o,t:out};AT.set(el,m)}
+}
+function trNode(n){
+ if(n.nodeType===3){
+  if(skip(n))return;
+  const rec=TX.get(n);let o=n.nodeValue;if(rec&&o===rec.t)o=rec.o;
+  const out=tr(o);if(out!==n.nodeValue)n.nodeValue=out;TX.set(n,{o,t:out});
+ }else if(n.nodeType===1){trAttrs(n);n.childNodes.forEach(trNode)}
+}
+function fillAirlines(){const dl=$('#airlines');if(!dl)return;dl.innerHTML=AIRZH.map(a=>`<option value="${esc(a[0])}"${LANG==='zh'&&a[1]&&a[1]!==a[0]?` label="${esc(a[1])}"`:''}></option>`).join('')}
+function setLang(l){
+ LANG=l;try{localStorage.setItem('lang',l)}catch(e){}
+ document.documentElement.lang=l==='zh'?'zh-Hant':'en';
+ fillAirlines();trNode(document.body);drawHero();drawSettings();
+}
+new MutationObserver(ms=>{for(const m of ms){
+ if(m.type==='childList')m.addedNodes.forEach(trNode);
+ else if(m.type==='characterData')trNode(m.target);
+ else if(m.type==='attributes')trAttrs(m.target)}
+}).observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:ATTRS});
+document.documentElement.lang=LANG==='zh'?'zh-Hant':'en';
+fillAirlines();trNode(document.body);
 </script>
 <script type="module" src="sync.js"></script>
 </body>

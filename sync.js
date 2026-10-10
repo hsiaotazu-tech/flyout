@@ -3,6 +3,7 @@ import {CONFIG} from './firebase-config.js';
 const FB='https://www.gstatic.com/firebasejs/10.14.1/';
 const A=window.__app;
 const S=window.__sync={mode:'local',role:'owner',email:'',error:'',configured:!!CONFIG.apiKey&&!/^YOUR/.test(CONFIG.apiKey)};
+{const m=location.hash.match(/[#&]j=([A-Za-z0-9]+)/);if(m)S.pending=m[1].toUpperCase()}
 let last={},ready=false,applying=false,timer=0,ctx=null,db,auth,F,AU,_idb;
 
 const rnd=()=>[...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -47,7 +48,8 @@ async function localInit(){
 async function openTrip(u,tid){
  const m=await F.getDoc(F.doc(db,'trips',tid,'members',u.uid));   // throws if you are not a member
  if(!m.exists())throw new Error('not a member');
- ctx={tid,uid:u.uid};S.role=m.data().role;S.mode='cloud';S.email=u.email||'';
+ ctx={tid,uid:u.uid};S.role=m.data().role;S.mode='cloud';S.email=u.email||'';S.pending='';
+ if(location.hash)history.replaceState(null,'',location.pathname+location.search);
  F.setDoc(F.doc(db,'users',u.uid),{tripId:tid},{merge:true}).catch(()=>{});
  await new Promise(res=>{
   let first=true;
@@ -64,20 +66,13 @@ async function openTrip(u,tid){
   },e=>{console.warn(e);done()});
  });
 }
-async function cloudInit(join){
+async function cloudInit(){
  const [{initializeApp},au,fs]=await Promise.all([import(FB+'firebase-app.js'),import(FB+'firebase-auth.js'),import(FB+'firebase-firestore.js')]);
  AU=au;F=fs;
  const app=initializeApp(CONFIG);auth=au.getAuth(app);
  db=fs.initializeFirestore(app,{localCache:fs.persistentLocalCache({tabManager:fs.persistentMultipleTabManager()})});
  try{await au.getRedirectResult(auth)}catch(e){console.warn(e)}
  let u=await new Promise(r=>{const off=au.onAuthStateChanged(auth,x=>{off();r(x)})});
- if(join){                                   // someone opened a share link
-  const [,tid,token,role]=join;
-  u=u||(await au.signInAnonymously(auth)).user;
-  try{await fs.setDoc(fs.doc(db,'trips',tid,'members',u.uid),{token,role,name:u.displayName||'Guest',joinedAt:fs.serverTimestamp()})}catch(e){console.warn('join',e.code)}
-  history.replaceState(null,'',location.pathname+location.search);
-  return openTrip(u,tid);
- }
  if(!u)return localInit();
  const ud=await fs.getDoc(fs.doc(db,'users',u.uid));
  if(ud.exists()&&ud.data().tripId)return openTrip(u,ud.data().tripId);
@@ -95,11 +90,10 @@ async function cloudInit(join){
  return openTrip(u,tid);
 }
 async function init(){
- const m=location.hash.match(/join=(\w+)\.(\w+)\.(editor|viewer)/);
- try{ if(S.configured)await cloudInit(m);else await localInit() }
+ try{ if(S.configured)await cloudInit();else await localInit() }
  catch(e){
   console.error(e);
-  S.error=m?'This link is invalid or has been revoked.':'Sync problem ('+(e.code||e.message)+').';
+  S.error='Sync problem ('+(e.code||e.message)+').';
   S.mode='local';S.role='owner';ctx=null;
   if(!ready)try{await localInit()}catch(_){ready=true}
  }
@@ -116,10 +110,39 @@ S.signIn=async()=>{need();const p=new AU.GoogleAuthProvider();
   throw e}
  location.reload()};
 S.signOut=async()=>{need();await AU.signOut(auth);location.reload()};
-const lnk=(t,r)=>location.origin+location.pathname+'#join='+ctx.tid+'.'+t+'.'+r;
-S.invite=async role=>{const t=rnd();await F.setDoc(F.doc(db,'trips',ctx.tid,'invites',t),{role,createdAt:F.serverTimestamp()});return lnk(t,role)};
-S.invites=async()=>(await F.getDocs(F.collection(db,'trips',ctx.tid,'invites'))).docs.map(d=>({id:d.id,role:d.data().role,link:lnk(d.id,d.data().role)}));
-S.revoke=id=>F.deleteDoc(F.doc(db,'trips',ctx.tid,'invites',id));
+const ALPHA='23456789ABCDEFGHJKLMNPQRSTUVWXYZ',LINK_LEN=10;     // 32 symbols, no 0/O/1/I: about 50 bits, not guessable
+const mkToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(LINK_LEN)),b=>ALPHA[b%32]).join('');
+const linkOf=t=>location.origin+location.pathname+'#j='+t;
+S.revoke=async t=>{await F.deleteDoc(F.doc(db,'links',t)).catch(()=>{});await F.deleteDoc(F.doc(db,'trips',ctx.tid,'invites',t))};
+S.newLink=async()=>{
+ need();
+ const old=(await F.getDocs(F.collection(db,'trips',ctx.tid,'invites'))).docs;
+ for(const d of old)await S.revoke(d.id);                       // the previous link stops working
+ const t=mkToken();
+ await F.setDoc(F.doc(db,'links',t),{tid:ctx.tid,by:ctx.uid});
+ await F.setDoc(F.doc(db,'trips',ctx.tid,'invites',t),{createdAt:F.serverTimestamp()});
+ return linkOf(t);
+};
+S.getLink=async()=>{
+ need();
+ const cur=(await F.getDocs(F.collection(db,'trips',ctx.tid,'invites'))).docs.filter(d=>d.id.length===LINK_LEN);
+ return cur.length?linkOf(cur[0].id):S.newLink();
+};
+S.join=async(name,raw)=>{
+ need();
+ const bad=new Error('This link is invalid or has been reset.');
+ const m=String(raw).match(/[#&?]j=([A-Za-z0-9]+)/),tok=(m?m[1]:String(raw).trim()).toUpperCase();
+ if(!new RegExp('^['+ALPHA+']{'+LINK_LEN+'}$').test(tok))throw bad;
+ const u=auth.currentUser||(await AU.signInAnonymously(auth)).user;
+ let c;try{c=await F.getDoc(F.doc(db,'links',tok))}catch(e){throw bad}
+ if(!c.exists())throw bad;
+ const tid=c.data().tid,mref=F.doc(db,'trips',tid,'members',u.uid);
+ try{await F.setDoc(mref,{token:tok,role:'editor',name:String(name).trim().slice(0,30)||'Guest',joinedAt:F.serverTimestamp()})}
+ catch(e){const mm=await F.getDoc(mref).catch(()=>null);if(!(mm&&mm.exists()))throw bad}   // already a member is fine
+ await F.setDoc(F.doc(db,'users',u.uid),{tripId:tid},{merge:true});
+ history.replaceState(null,'',location.pathname+location.search);
+ location.reload();
+};
 S.members=async()=>(await F.getDocs(F.collection(db,'trips',ctx.tid,'members'))).docs.map(d=>({uid:d.id,role:d.data().role,name:d.data().name}));
 S.kick=uid=>F.deleteDoc(F.doc(db,'trips',ctx.tid,'members',uid));
 S.leave=async()=>{await F.deleteDoc(F.doc(db,'trips',ctx.tid,'members',ctx.uid));await F.deleteDoc(F.doc(db,'users',ctx.uid)).catch(()=>{});location.reload()};

@@ -15,6 +15,14 @@ service cloud.firestore {
       allow read, write: if signedIn() && request.auth.uid == uid;
     }
 
+    // share link: the link carries a random token. A signed-in person can look up ONE token they hold (no listing); only the owner creates or deletes tokens
+    match /links/{token} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if isGoogle() && isOwner(request.resource.data.tid);
+      allow delete: if isOwner(resource.data.tid);
+    }
+
     match /trips/{t} {
       allow read: if isMember(t);
       allow create: if isGoogle() && request.resource.data.owner == request.auth.uid;
@@ -26,7 +34,7 @@ service cloud.firestore {
         allow create, update, delete: if canEdit(t);
       }
 
-      // share links: only the owner can see, create or revoke them
+      // the owner's own record of the active share link
       match /invites/{token} {
         allow read, write: if isOwner(t);
       }
@@ -40,11 +48,11 @@ service cloud.firestore {
           && !exists(/databases/$(db)/documents/trips/$(t))
           && getAfter(/databases/$(db)/documents/trips/$(t)).data.owner == request.auth.uid;
 
-        // 2) anyone holding a valid share-link token can join with exactly that link's role
+        // 2) anyone holding the trip's current share-link token can join as an editor
         allow create: if signedIn() && request.auth.uid == uid
-          && request.resource.data.role in ['editor', 'viewer']
-          && exists(/databases/$(db)/documents/trips/$(t)/invites/$(request.resource.data.token))
-          && get(/databases/$(db)/documents/trips/$(t)/invites/$(request.resource.data.token)).data.role == request.resource.data.role;
+          && request.resource.data.role == 'editor'
+          && exists(/databases/$(db)/documents/links/$(request.resource.data.token))
+          && get(/databases/$(db)/documents/links/$(request.resource.data.token)).data.tid == t;
 
         allow delete: if isOwner(t) || (signedIn() && request.auth.uid == uid);
       }
