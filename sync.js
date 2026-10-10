@@ -48,7 +48,7 @@ async function localInit(){
 async function openTrip(u,tid){
  const m=await F.getDoc(F.doc(db,'trips',tid,'members',u.uid));   // throws if you are not a member
  if(!m.exists())throw new Error('not a member');
- ctx={tid,uid:u.uid};S.role=m.data().role;S.mode='cloud';S.email=u.email||'';S.pending='';
+ ctx={tid,uid:u.uid};S.tid=tid;S.role=m.data().role;S.mode='cloud';S.email=u.email||'';S.pending='';
  if(location.hash)history.replaceState(null,'',location.pathname+location.search);
  try{localStorage.setItem('trip',tid)}catch(e){}
  F.setDoc(F.doc(db,'users',u.uid),{tripId:tid},{merge:true}).catch(()=>{});
@@ -73,12 +73,15 @@ const mkToken=()=>Array.from(crypto.getRandomValues(new Uint8Array(LINK_LEN)),b=
 const linkOf=t=>location.origin+location.pathname+'#j='+t;
 const parseTok=raw=>{const m=String(raw).match(/[#&?]j=([A-Za-z0-9]+)/),t=(m?m[1]:String(raw).trim()).toUpperCase();return new RegExp('^['+ALPHA+']{'+LINK_LEN+'}$').test(t)?t:null};
 const linkCache={};
+const tripIds=d=>[...new Set([...(d.trips||[]),...(d.tripId?[d.tripId]:[])])];
+async function ownedIds(uid){try{return (await F.getDocs(F.query(F.collection(db,'trips'),F.where('owner','==',uid)))).docs.map(d=>d.id)}catch(e){return []}}   // needs the 2026-10 rules; harmless without them
 
 async function createTrip(uid,name,dataMap){
+ const cur=await F.getDoc(F.doc(db,'users',uid)),keep=tripIds(cur.exists()?cur.data():{});      // trips you already have stay in the list
  const tid=rnd(),b1=F.writeBatch(db);
  b1.set(F.doc(db,'trips',tid),{owner:uid,name,createdAt:F.serverTimestamp()});
  b1.set(F.doc(db,'trips',tid,'members',uid),{role:'owner',name:(auth.currentUser&&auth.currentUser.displayName)||'',joinedAt:F.serverTimestamp()});
- b1.set(F.doc(db,'users',uid),{tripId:tid,trips:F.arrayUnion(tid)},{merge:true});
+ b1.set(F.doc(db,'users',uid),{tripId:tid,trips:[...new Set([...keep,tid])]},{merge:true});
  await b1.commit();
  const rows=Object.entries(dataMap);
  for(let i=0;i<rows.length;i+=100){
@@ -103,14 +106,15 @@ async function cloudInit(){
  const [{initializeApp},au,fs]=await Promise.all([import(FB+'firebase-app.js'),import(FB+'firebase-auth.js'),import(FB+'firebase-firestore.js')]);
  AU=au;F=fs;
  const app=initializeApp(CONFIG);auth=au.getAuth(app);
- db=fs.initializeFirestore(app,{localCache:fs.persistentLocalCache({tabManager:fs.persistentMultipleTabManager()})});
+ db=fs.initializeFirestore(app,{localCache:fs.persistentLocalCache({tabManager:fs.persistentMultipleTabManager()}),experimentalAutoDetectLongPolling:true});   // more reliable on some phone networks
  try{await au.getRedirectResult(auth)}catch(e){console.warn(e)}
  let u=await new Promise(r=>{const off=au.onAuthStateChanged(auth,x=>{off();r(x)})});
  if(!u)return localInit();
  // a guest who already joined one trip taps another trip's link: join it with the same name
  if(S.pending&&u.isAnonymous&&lsGet('guestName')){try{await joinWith(u,lsGet('guestName'),S.pending)}catch(e){console.warn(e)}}
  const uref=fs.doc(db,'users',u.uid),ud=await fs.getDoc(uref),data=ud.exists()?ud.data():{};
- const ids=data.trips||(data.tripId?[data.tripId]:[]),want=lsGet('trip');
+ let ids=tripIds(data);const want=lsGet('trip');
+ if(!ids.length&&!u.isAnonymous){ids=await ownedIds(u.uid);if(ids.length)fs.setDoc(uref,{trips:ids,tripId:ids[0]},{merge:true}).catch(()=>{})}   // never start a second trip when one already exists
  const first=want&&(ids.includes(want)||want===data.tripId)?want:(data.tripId||ids[0]);
  for(const tid of [first,...ids.filter(x=>x!==first)].filter(Boolean)){
   try{await openTrip(u,tid);return}
@@ -180,22 +184,28 @@ S.kick=uid=>F.deleteDoc(F.doc(db,'trips',ctx.tid,'members',uid));
 S.leave=async()=>{await F.deleteDoc(F.doc(db,'trips',ctx.tid,'members',ctx.uid));await F.deleteDoc(F.doc(db,'users',ctx.uid)).catch(()=>{});lsSet('trip','');location.reload()};
 S.myTrips=async()=>{
  need();
- const ud=await F.getDoc(F.doc(db,'users',ctx.uid)),d=ud.exists()?ud.data():{},ids=d.trips||(d.tripId?[d.tripId]:[]),out=[];
- for(const tid of ids){
+ const [ud,owned]=await Promise.all([F.getDoc(F.doc(db,'users',ctx.uid)),ownedIds(ctx.uid)]);
+ const d=ud.exists()?ud.data():{},ids=[...new Set([...tripIds(d),...owned])];
+ const missing=owned.filter(x=>!(d.trips||[]).includes(x));
+ if(missing.length)F.setDoc(F.doc(db,'users',ctx.uid),{trips:F.arrayUnion(...missing)},{merge:true}).catch(()=>{});   // put forgotten trips back in the list
+ const rows=await Promise.all(ids.map(async tid=>{
   try{
-   const t=await F.getDoc(F.doc(db,'trips',tid,'data','trip')),v=t.exists()?JSON.parse(t.data().j):(tid===ctx.tid?A.get('trip'):null);
-   const td=await F.getDoc(F.doc(db,'trips',tid)).catch(()=>null);
-   if(v)out.push({tid,dest:v.dest,title:(td&&td.exists()&&td.data().title)||'',start:v.start,end:v.end,current:tid===ctx.tid});
-  }catch(e){}
- }
+   const [t,td]=await Promise.all([F.getDoc(F.doc(db,'trips',tid,'data','trip')),F.getDoc(F.doc(db,'trips',tid)).catch(()=>null)]);
+   const v=t.exists()?JSON.parse(t.data().j):(tid===ctx.tid?A.get('trip'):null);
+   return v?{tid,dest:v.dest,title:(td&&td.exists()&&td.data().title)||'',start:v.start,end:v.end,current:tid===ctx.tid}:null;
+  }catch(e){return null}
+ }));
+ const out=rows.filter(Boolean);
+ try{localStorage.setItem('tripsCache',JSON.stringify(out))}catch(e){}
  return out;
 };
+S.cachedTrips=()=>{try{return JSON.parse(localStorage.getItem('tripsCache')||'null')}catch(e){return null}};
 S.renameTrip=async(tid,name)=>{need();await F.setDoc(F.doc(db,'trips',tid),{title:name},{merge:true})};   // the list name only; the destination on the overview is untouched
 S.switchTrip=tid=>{lsSet('trip',tid);location.reload()};
 S.newTrip=async()=>{
  need();
  const ud=await F.getDoc(F.doc(db,'users',ctx.uid)),d=ud.exists()?ud.data():{};
- if((d.trips||(d.tripId?[d.tripId]:[])).length>=20)throw new Error('You can keep up to 20 trips.');
+ if(tripIds(d).length>=20)throw new Error('You can keep up to 20 trips.');
  const tpl=A.template(),map=Object.fromEntries(Object.entries(tpl).map(([k,v])=>[k,JSON.stringify(v)]));
  const tid=await createTrip(ctx.uid,tpl.trip.dest,map);
  lsSet('trip',tid);location.reload();
@@ -209,11 +219,13 @@ S.deleteTrip=async tid=>{
  await wipe((await list('members')).filter(d=>d.id!==ctx.uid));    // guests lose access
  await F.deleteDoc(F.doc(db,'trips',tid));
  await F.deleteDoc(F.doc(db,'trips',tid,'members',ctx.uid));         // the owner's own membership goes last
- await F.setDoc(F.doc(db,'users',ctx.uid),{trips:F.arrayRemove(tid)},{merge:true});
- delete linkCache[tid];
+ const uref=F.doc(db,'users',ctx.uid);
+ await F.setDoc(uref,{trips:F.arrayRemove(tid)},{merge:true});
+ const d=(await F.getDoc(uref)).data()||{},rest=tripIds(d).filter(x=>x!==tid);
+ if(d.tripId===tid)await F.setDoc(uref,{tripId:rest[0]||F.deleteField()},{merge:true});
+ delete linkCache[tid];try{localStorage.removeItem('tripsCache')}catch(e){}
  if(wasCurrent){
-  const rest=(((await F.getDoc(F.doc(db,'users',ctx.uid))).data()||{}).trips||[]).filter(x=>x!==tid);
-  if(rest.length){lsSet('trip',rest[0]);await F.setDoc(F.doc(db,'users',ctx.uid),{tripId:rest[0]},{merge:true});location.reload()}
+  if(rest.length){lsSet('trip',rest[0]);location.reload()}
   else await S.newTrip();
  }
 };

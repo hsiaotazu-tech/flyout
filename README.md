@@ -17,12 +17,15 @@ GitHub Pages 放畫面、Firebase 放資料與登入、PWA 負責離線與安裝
 - 每一列:旅程名稱後面的淡色鉛筆可以改名稱(只改清單上的名稱,不影響總覽的目的地);右邊的連結圖示複製該趟的分享連結;**向左滑動**這一列刪除該趟(會先跳出確認,刪除後無法復原,連同照片、成員和分享連結都會移除)。
 - 朋友沒有設定頁,所以不能自己切換旅程。他們點哪一趟的連結就切到哪一趟,之前加入的旅程再點一次連結就回得去。被你刪除的旅程,朋友下次打開會看到「這趟旅程已經不存在了」。
 
+## 旅程不見了怎麼辦
+資料不會因為切換或新增而消失,不見的只是「我的旅程」清單裡少了一筆。更新規則和網站後,「我的旅程」會用擁有者身分自動把你名下的旅程找回來。想手動處理:Firebase 主控台 → Firestore → Data → `trips`,找到那趟旅程的文件 ID(裡面 `data/trip` 的 dest 是旅程名稱),再到 `users` → 你的文件,把這個 ID 加進 `trips` 陣列。
+
 ## 一、建立 Firebase 專案
 1. https://console.firebase.google.com → Add project(Analytics 可以關掉)。
 2. **Authentication → Sign-in method**:啟用 **Google** 和 **Anonymous**(兩個都要)。
 3. **Authentication → Settings → Authorized domains**:加入你網站的網域(`你的帳號.github.io` 或你的自訂網域)。
 4. **Firestore Database → Create database**(production mode,地區選 asia-east1 或 asia-northeast1)。
-5. Firestore 的 **Rules** 分頁:把 `firestore.rules` 整份貼上 → **Publish**。**這次的規則又更新了(分享連結改用 `links`),已經部署過的人也要重新貼上並發布。**
+5. Firestore 的 **Rules** 分頁:把 `firestore.rules` 整份貼上 → **Publish**。**規則有更新(分享連結用 `links`,並新增「擁有者可以列出自己的旅程」),已經部署過的人也要重新貼上並發布。**
 6. **Project settings → Your apps → Web**:把 `apiKey`、`authDomain`、`projectId`、`appId` 填進 `firebase-config.js`(這些是公開設定,不是密碼)。
 
 > Firebase 的免費額度和功能的方案要求會調整,正式使用前請到官方頁面確認。

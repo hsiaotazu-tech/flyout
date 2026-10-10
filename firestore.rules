@@ -25,6 +25,8 @@ service cloud.firestore {
 
     match /trips/{t} {
       allow read: if isMember(t);
+      // an owner can list the trips they own (used to find them again if the list is ever lost)
+      allow list: if isGoogle() && resource.data.owner == request.auth.uid;
       allow create: if isGoogle() && request.resource.data.owner == request.auth.uid;
       allow update, delete: if isOwner(t);
 

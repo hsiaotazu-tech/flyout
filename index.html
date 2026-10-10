@@ -754,7 +754,7 @@ function drawSettings(){
   st=own?'Signed in as '+(s.email||'owner'):'You joined this trip as '+(s.role==='editor'?'an editor':'a viewer')+'.';
   acct=`<div class="tiles" style="--n:1">${own?tl('signout','out','Sign out'):tl('leave','out','Leave trip',1)}</div>`;
   if(own){
-   trips=`<div class="lb lbrow" style="text-align:left;margin:22px 0 8px"><span>My trips</span><button class="addb" data-act="newtrip" aria-label="New trip">+ New</button></div><div class="card"><div id="tlist"><p class="empty">Loading…</p></div></div>`;
+   trips=`<div class="lb lbrow" style="text-align:left;margin:22px 0 8px"><span>My trips</span><button class="addb" data-act="newtrip" aria-label="New trip"${creating?' disabled':''}>${creating?'Creating…':'+ New'}</button></div><div class="card"><div id="tlist"><p class="empty">Loading…</p></div></div>`;
    people=card('People','<div id="slist"><p class="empty">Loading…</p></div>');
   }
  }else{
@@ -765,15 +765,25 @@ function drawSettings(){
  el.innerHTML=`<div class="trow"><h1 class="serif" style="font-size:26px">Settings</h1><div class="lgs" role="group" aria-label="Language"><button data-lang="en" class="${LANG==='en'?'on':''}">EN</button><button data-lang="zh" class="${LANG==='zh'?'on':''}">中文</button></div></div>`+card('Account',`<p class="sub" id="acm" style="margin:0 0 12px">${esc(st)}</p>${acct}`)+trips+people;
  loadTrips();loadPeople();
 }
+let tripsBusy=false,tripsAgain=false,creating=false;
+function paintTrips(list){
+ const box=$('#tlist');if(!box)return;
+ const now=new Date();now.setHours(0,0,0,0);
+ const rows=list.map(t=>({...t,past:pd(t.end)<now}));
+ rows.sort((a,b)=>(a.past-b.past)||(a.past?pd(b.end)-pd(a.end):pd(a.start)-pd(b.start)));
+ box.innerHTML=rows.length?rows.map(t=>{const name=t.title||t.dest||'Untitled trip';return `<div class="tw"><div class="tdel">${ic('trash',20)}</div><div class="tr" data-cur="${t.current?1:''}" data-id="${esc(t.tid)}" data-title="${esc(name)}"><div class="tr-main" data-act="open" data-v="${esc(t.tid)}"><b>${esc(name)}<button class="pen" data-act="rename" data-v="${esc(t.tid)}" aria-label="Rename trip">${ic('pen',13)}</button>${t.current?'<span class="bdg cur">Current</span>':''}${t.past?'<span class="bdg">Past</span>':''}</b><div class="sub">${range(t.start,t.end)}</div></div><button class="ib" data-act="tshare" data-v="${esc(t.tid)}" aria-label="Share link">${ic('link',18)}</button></div></div>`}).join(''):'<p class="empty">No trips yet.</p>';
+}
 async function loadTrips(){
- const s=window.__sync,box=$('#tlist');
- if(!box||!s||s.mode!=='cloud'||s.role!=='owner')return;
+ const s=window.__sync;
+ if(!$('#tlist')||!s||s.mode!=='cloud'||s.role!=='owner')return;
+ if(tripsBusy){tripsAgain=true;return}
+ tripsBusy=true;
  try{
-  const now=new Date();now.setHours(0,0,0,0);
-  const rows=(await s.myTrips()).map(t=>({...t,past:pd(t.end)<now}));
-  rows.sort((a,b)=>(a.past-b.past)||(a.past?pd(b.end)-pd(a.end):pd(a.start)-pd(b.start)));
-  box.innerHTML=rows.length?rows.map(t=>{const name=t.title||t.dest||'Untitled trip';return `<div class="tw"><div class="tdel">${ic('trash',20)}</div><div class="tr" data-cur="${t.current?1:''}" data-id="${esc(t.tid)}" data-title="${esc(name)}"><div class="tr-main" data-act="open" data-v="${esc(t.tid)}"><b>${esc(name)}<button class="pen" data-act="rename" data-v="${esc(t.tid)}" aria-label="Rename trip">${ic('pen',13)}</button>${t.current?'<span class="bdg cur">Current</span>':''}${t.past?'<span class="bdg">Past</span>':''}</b><div class="sub">${range(t.start,t.end)}</div></div><button class="ib" data-act="tshare" data-v="${esc(t.tid)}" aria-label="Share link">${ic('link',18)}</button></div></div>`}).join(''):'<p class="empty">No trips yet.</p>';
- }catch(e){box.innerHTML='<p class="empty">Could not load.</p>'}
+  const c=s.cachedTrips&&s.cachedTrips();
+  if(c&&c.length)paintTrips(c.map(t=>({...t,current:t.tid===s.tid})));      // show the last known list at once
+  paintTrips(await s.myTrips());
+ }catch(e){const b=$('#tlist');if(b&&!b.querySelector('.tr'))b.innerHTML='<p class="empty">Could not load.</p>'}
+ finally{tripsBusy=false;if(tripsAgain){tripsAgain=false;loadTrips()}}
 }
 async function loadPeople(){
  const s=window.__sync,box=$('#slist');
@@ -807,7 +817,7 @@ $('#settings').addEventListener('click',async e=>{
   else if(a==='signout')await s.signOut();
   else if(a==='open'){if(!b.closest('.tr').dataset.cur)s.switchTrip(v)}
   else if(a==='tshare')await copyLink(b,v);
-  else if(a==='newtrip'){b.textContent='Creating…';b.disabled=true;await s.newTrip()}
+  else if(a==='newtrip'){if(creating)return;creating=true;b.textContent='Creating…';b.disabled=true;try{await s.newTrip()}catch(err){creating=false;throw err}}
   else if(a==='rename'){
    const cur=b.closest('.tr').dataset.title;
    open(`<div class="rn"><input class="in" id="rn" value="${esc(cur)}" placeholder="Trip name" maxlength="60" autocomplete="off"><button class="tile pri" id="rs"><span>Save</span></button></div>`);
