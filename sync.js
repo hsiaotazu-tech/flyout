@@ -118,6 +118,8 @@ async function cloudInit(){
  // a guest who already joined one trip taps another trip's link: join it with the same name
  if(S.pending&&u.isAnonymous&&lsGet('guestName')){try{await joinWith(u,lsGet('guestName'),S.pending)}catch(e){console.warn(e)}}
  const uref=fs.doc(db,'users',u.uid),ud=await fast(uref),data=ud.exists()?ud.data():{};
+ if(data.lang&&A.langFromCloud)A.langFromCloud(data.lang);   // a language picked on another device
+ fs.getDoc(uref).then(r=>{const l=r.exists()&&r.data().lang;if(l&&A.langFromCloud)A.langFromCloud(l)}).catch(()=>{});   // and check the server in case the saved copy is old
  let ids=tripIds(data);const want=lsGet('trip');
  if(!ids.length&&!u.isAnonymous){ids=await ownedIds(u.uid);if(ids.length)fs.setDoc(uref,{trips:ids,tripId:ids[0]},{merge:true}).catch(()=>{})}   // never start a second trip when one already exists
  const first=want&&(ids.includes(want)||want===data.tripId)?want:(data.tripId||ids[0]);
@@ -205,6 +207,7 @@ S.myTrips=async()=>{
  return out;
 };
 S.cachedTrips=()=>{try{return JSON.parse(localStorage.getItem('tripsCache')||'null')}catch(e){return null}};
+S.saveLang=l=>{if(S.mode==='cloud'&&ctx)F.setDoc(F.doc(db,'users',ctx.uid),{lang:l},{merge:true}).catch(()=>{})};
 S.renameMe=async name=>{need();const n=String(name).trim().slice(0,30);await F.setDoc(F.doc(db,'trips',ctx.tid,'members',ctx.uid),{name:n},{merge:true});await F.setDoc(F.doc(db,'users',ctx.uid),{name:n},{merge:true})};   // the owner's display name
 S.renameTrip=async(tid,name)=>{need();await F.setDoc(F.doc(db,'trips',tid),{title:name},{merge:true})};   // the list name only; the destination on the overview is untouched
 S.switchTrip=tid=>{lsSet('trip',tid);location.reload()};
