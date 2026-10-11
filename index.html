@@ -349,6 +349,10 @@ input,select,textarea{font-size:16px!important}
 .sheet.sm .rn .tile{min-width:64px;padding:0 12px;border-radius:14px}
 /* v26 */
 .pen{vertical-align:-2px}
+/* v27: card stack without the backing block */
+.fcard:has(>.stk){background:none;box-shadow:none;border:0;padding:0}
+.fcard>.stk{margin:0}
+.fcard>.stk .sc{background:var(--card)}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 </style>
 </head>
@@ -451,7 +455,6 @@ function legs(){return T.f.map(f=>{const d=ad(pd(f.dir?T.end:T.start),+f.o||0);r
 function place(){
  const n=T.f.length;
  document.querySelectorAll('#stk .sc').forEach((c,i)=>{const p=(i-sk+n)%n,q=Math.min(p,2);c.style.zIndex=n-p;c.style.transform=`translateY(${q*11}px) scale(${1-q*.05})`;c.style.opacity=p>2?0:1-p*.18;c.style.pointerEvents=p?'none':'auto'});
- const h=$('#skh');if(h)h.textContent=(sk+1)+' / '+n+' · tap to flip';
 }
 $('#fl').onclick=e=>{if(!e.target.closest('#stk'))return;sk=(sk+1)%T.f.length;place()};
 let CD=null;
@@ -478,7 +481,7 @@ function drawHero(){
  const al=f=>esc(f.al==='Select'?'':airL(f.al));
  if(L.length>2){
   sk=Math.min(sk,L.length-1);
-  $('#fl').innerHTML=`<div class="stk" id="stk">${L.map(f=>`<div class="sc"><div class="fi">${PL(45)}</div><div class="sr"><b>${f.from}–${f.to}</b><span>${al(f)} ${esc(f.code)}</span></div><div class="t">${md(f.d)} ${f.dep}<br>${md(f.r)} ${f.arr}</div></div>`).join('')}</div><div class="skh" id="skh"></div>`;
+  $('#fl').innerHTML=`<div class="stk" id="stk">${L.map(f=>`<div class="sc"><div class="fi">${PL(45)}</div><div class="sr"><b>${f.from}–${f.to}</b><span>${al(f)} ${esc(f.code)}</span></div><div class="t">${md(f.d)} ${f.dep}<br>${md(f.r)} ${f.arr}</div></div>`).join('')}</div>`;
   place();
  }else $('#fl').innerHTML=L.map(f=>`<div class="fr"><div class="fi">${PL(f.dir?-135:45)}</div><div class="sr"><b>${f.from}–${f.to}</b><span>${al(f)} ${esc(f.code)}</span></div><div class="t">${md(f.d)} ${f.dep}<br>${md(f.r)} ${f.arr}</div></div>`).join('');
 }
@@ -492,8 +495,8 @@ let tab=0,draft;
 const fd=v=>{if(!v)return '—';const[y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})};
 const dtf=(id,type,v)=>`<label class="in dt"><span>${type==='date'?fd(v):v}</span><input type="${type}" id="${id}" value="${v}"></label>`;
 function tripForm(){
- const f=draft.f[tab],x=tab>1;
- const tabs=draft.f.map((l,i)=>`<button class="${i===tab?'on':''}" data-t="${i}">${i<2?['Departure','Return'][i]:'Flight '+(i+1)}</button>`).join('');
+ const f=draft.f[tab],x=draft.f.length>1;
+ const tabs=draft.f.map((l,i)=>`<button class="${i===tab?'on':''}" data-t="${i}">${draft.f.length===2?['Departure','Return'][i]:'Flight '+(i+1)}</button>`).join('');
  open(`<div class="lb" style="margin-top:0">Destination</div><input class="in" id="d_dest" value="${esc(draft.dest)}">
  <div class="g2"><div><div class="lb">Start</div>${dtf('d_s','date',draft.start)}</div><div><div class="lb">End</div>${dtf('d_e','date',draft.end)}</div></div>
  <div class="seg">${tabs}</div>
@@ -501,7 +504,7 @@ function tripForm(){
  <div><div class="lb">Airline</div><input class="in" id="f_al" list="airlines" value="${esc(f.al==='Select'?'':f.al)}" placeholder="Search or type" autocomplete="off"></div><div><div class="lb">Code</div><input class="in" id="f_code" value="${esc(f.code)}"></div>
  <div><div class="lb">From</div><input class="in" id="f_from" list="airports" value="${esc(apLabel(f.from))}" placeholder="Search airport" autocomplete="off" autocapitalize="characters"></div><div><div class="lb">To</div><input class="in" id="f_to" list="airports" value="${esc(apLabel(f.to))}" placeholder="Search airport" autocomplete="off" autocapitalize="characters"></div>
  <div><div class="lb">Depart</div>${dtf('f_dep','time',f.dep)}</div><div><div class="lb">Arrive</div>${dtf('f_arr','time',f.arr)}</div>
- ${x?`<div><div class="lb">Direction</div>${sel('f_dir',['Departure','Return'],f.dir?'Return':'Departure')}</div><div><div class="lb">Departs</div>${sel('f_o',['Same day','+1 day'],f.o?'+1 day':'Same day')}</div>`:''}
+
  <div style="grid-column:1/-1"><div class="lb">Arrival day</div>${sel('f_p',['Same day','+1 day'],f.p?'+1 day':'Same day')}</div></div></div>
  <div class="tiles" style="--n:${x?3:2}"><button class="tile" id="d_add"><i>${ic('plus')}</i><span>Add trip</span></button><button class="tile pri" id="d_save"><i>${ic('check')}</i><span>Save trip</span></button>${x?'<button class="tile dng" id="d_rm"><i>'+ic('trash')+'</i><span>Remove flight</span></button>':''}</div>`);
 }
@@ -509,22 +512,30 @@ function grab(){
  const f=draft.f[tab];
  draft.dest=$('#d_dest').value.trim()||'New Destination';draft.start=$('#d_s').value||draft.start;draft.end=$('#d_e').value||draft.end;
  f.al=$('#f_al').value;f.code=$('#f_code').value.trim();f.from=apCode($('#f_from').value)||f.from;f.to=apCode($('#f_to').value)||f.to;f.dep=$('#f_dep').value||f.dep;f.arr=$('#f_arr').value||f.arr;f.p=$('#f_p').value==='+1 day'?1:0;
- if(tab>1){f.dir=$('#f_dir').value==='Return'?1:0;f.o=$('#f_o').value==='+1 day'?1:0}
 }
+const hm=t=>{const[h,m]=String(t||'00:00').split(':').map(Number);return h*60+m};
+const hmStr=m=>pad(Math.floor(m/60))+':'+pad(m%60);
+const legKey=f=>ad(pd(f.dir?draft.end:draft.start),+f.o||0).getTime()+hm(f.dep)*60000;
+function sortDraft(keep){const k=keep||draft.f[tab];draft.f.sort((a,b)=>legKey(a)-legKey(b));tab=Math.max(0,draft.f.indexOf(k))}   // tabs always follow the clock
 $('#sheet').onclick=e=>{
  const t=e.target.closest('[data-t]');
- if(t){grab();tab=+t.dataset.t;tripForm();return}
- if(e.target.closest('#d_add')){grab();const p=draft.f[tab];draft.f.push({al:p.al,code:'',from:p.to,to:p.from,dep:'12:00',arr:'14:00',p:0,dir:p.dir,o:0});tab=draft.f.length-1;tripForm();return}
+ if(t){const target=draft.f[+t.dataset.t];grab();sortDraft(target);tripForm();return}
+ if(e.target.closest('#d_add')){                       // a new flight starts after the one you are looking at (a connection); change its times and it moves into place
+  grab();sortDraft();
+  const p=draft.f[tab];let a=hm(p.arr)+120,o=(+p.o||0)+(+p.p||0);if(a>=1440){a-=1440;o++}
+  let b=a+120,pp=0;if(b>=1440){b-=1440;pp=1}
+  const nl={al:p.al,code:'',from:p.to,to:p.from,dep:hmStr(a),arr:hmStr(b),p:pp,dir:p.dir,o};
+  draft.f.push(nl);sortDraft(nl);tripForm();return}
  const rm=e.target.closest('#d_rm');
- if(rm){if(!rm.dataset.c){rm.dataset.c=1;rm.classList.add('arm');rm.querySelector('span').textContent='Tap again';return}grab();draft.f.splice(tab,1);tab=Math.max(0,tab-1);T.f=JSON.parse(JSON.stringify(draft.f));drawHero();tripForm();return}
- if(e.target.closest('#d_save')){grab();if(pd(draft.end)<pd(draft.start))draft.end=draft.start;Object.assign(T,draft);close();drawHero();relabel();drawPlan()}
+ if(rm){if(!rm.dataset.c){rm.dataset.c=1;rm.classList.add('arm');rm.querySelector('span').textContent='Tap again';return}grab();draft.f.splice(tab,1);tab=Math.min(tab,draft.f.length-1);T.f=JSON.parse(JSON.stringify(draft.f));drawHero();tripForm();return}
+ if(e.target.closest('#d_save')){grab();if(pd(draft.end)<pd(draft.start))draft.end=draft.start;sortDraft();Object.assign(T,draft);close();drawHero();relabel();drawPlan()}
 };
 $('#sheet').addEventListener('change',e=>{
  const t=e.target;
  if(t.closest('.dt'))t.previousElementSibling.textContent=t.type==='date'?fd(t.value):t.value;
  else if(t.type==='file'){const l=t.closest('.pk');if(l)l.firstChild.nodeValue=t.files[0]?'Photo ready':l.dataset.l}
 });
-const editTrip=()=>{draft=JSON.parse(JSON.stringify(T));tab=0;tripForm()};
+const editTrip=()=>{draft=JSON.parse(JSON.stringify(T));tab=0;sortDraft();tab=0;tripForm()};
 $('#route').addEventListener('click',e=>{if(e.target.closest('.pl'))editTrip()});
 $('#route').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('.pl')){e.preventDefault();editTrip()}});
 
