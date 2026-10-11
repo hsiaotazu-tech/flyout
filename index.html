@@ -353,6 +353,14 @@ input,select,textarea{font-size:16px!important}
 .fcard:has(>.stk){background:none;box-shadow:none;border:0;padding:0}
 .fcard>.stk{margin:0}
 .fcard>.stk .sc{background:var(--card)}
+/* v28: flight dates, connection check */
+.in.ro{display:block;color:var(--mute)}
+.ck2{display:grid;place-items:center;border:0;cursor:pointer;color:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}
+.ck2.on{background:var(--pine);color:var(--card);box-shadow:none}
+/* v29: simple Transfer toggle */
+.tg{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:36px;border:0;background:none;color:var(--ink);font:500 16px 'DM Sans',sans-serif;cursor:pointer;padding:0}
+.tg .ring{width:22px;height:22px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--mute);display:grid;place-items:center;color:transparent;font-style:normal;flex:none;transition:background .15s}
+.tg.on .ring{background:var(--pine);box-shadow:none;color:var(--card)}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--acc);outline-offset:2px}
 </style>
 </head>
@@ -445,13 +453,29 @@ const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 /* ---------- Trip ---------- */
 const t0=new Date();t0.setDate(t0.getDate()+30);
 const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
-const T={dest:'My Trip',start:iso(t0),end:iso(ad(t0,6)),f:[{al:'',code:'',from:'TPE',to:'NRT',dep:'09:00',arr:'13:00',p:0,dir:0,o:0},{al:'',code:'',from:'NRT',to:'TPE',dep:'15:00',arr:'18:00',p:0,dir:1,o:0}]};
+const t1=ad(t0,6);
+const T={dest:'My Trip',start:iso(t0),end:iso(t1),f:[{al:'',code:'',from:'TPE',to:'NRT',dt:iso(t0)+'T09:00',at:iso(t0)+'T13:00',conn:false},{al:'',code:'',from:'NRT',to:'TPE',dt:iso(t1)+'T15:00',at:iso(t1)+'T18:00',conn:false}]};
+const pdt=s=>{const m=String(s||'').match(/^(\d{4})-(\d\d)-(\d\d)[T ](\d\d):(\d\d)/);return m?new Date(+m[1],m[2]-1,+m[3],+m[4],+m[5]):new Date(NaN)};
+const isoDT=d=>iso(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+function migrateTrip(v){       // older trips stored a day offset and a time; turn them into real dates
+ if(!v||!Array.isArray(v.f))return v;
+ v.f=v.f.map(f=>{
+  if(f.dt)return f;
+  const d=ad(pd(f.dir?v.end:v.start),+f.o||0),a=ad(d,+f.p||0);
+  return{al:f.al,code:f.code,from:f.from,to:f.to,dt:iso(d)+'T'+(f.dep||'00:00'),at:iso(a)+'T'+(f.arr||'00:00'),conn:!!f.conn};
+ });
+ return v;
+}
+function recalcRange(){       // the itinerary runs from the first to the last flight that is not a connection
+ const L=legs(),core=L.filter(f=>!f.conn),b=core.length?core:L;
+ if(b.length&&!isNaN(b[0].d)){T.start=iso(b[0].d);T.end=iso(b[b.length-1].d)}
+}
 const LAND=[[0,[[5,12],[20,28],[46,55]]],[1,[[4,14],[17,28],[44,63]]],[2,[[2,18],[19,26],[31,36],[40,63]]],[3,[[2,17],[19,24],[30,40],[41,63]]],[4,[[2,18],[28,63]]],[5,[[4,18],[28,63]]],[6,[[4,17],[28,62]]],[7,[[5,17],[29,62]]],[8,[[6,16],[29,60]]],[9,[[7,14],[29,50],[52,58]]],[10,[[8,12],[29,48],[52,57]]],[11,[[9,13],[19,26],[29,43],[53,55]]],[12,[[19,27],[30,42],[52,56]]],[13,[[18,27],[31,42],[54,58]]],[14,[[19,27],[32,41],[55,60]]],[15,[[19,26],[33,41],[57,61]]],[16,[[20,26],[34,40],[52,60]]],[17,[[20,26],[34,40],[51,60]]],[18,[[20,25],[35,39],[51,60]]],[19,[[20,24],[36,39],[52,59]]],[20,[[20,23],[53,58]]],[21,[[20,23]]],[22,[[20,22]]]];
 $('#map').innerHTML=LAND.map(([r,rs])=>rs.map(([a,b])=>{let o='';for(let c=a;c<=b;c++)o+=`<circle cx="${c*6+3}" cy="${r*6+3}" r="1.9" fill="currentColor"/>`;return o}).join('')).join('');
 
 let sk=0;
 const PL=r=>`<span style="display:grid;transform:rotate(${r}deg)">${PLANE}</span>`;
-function legs(){return T.f.map(f=>{const d=ad(pd(f.dir?T.end:T.start),+f.o||0);return{...f,d,r:ad(d,+f.p)}}).sort((a,b)=>(a.d-b.d)||a.dep.localeCompare(b.dep))}
+function legs(){return T.f.map(f=>({...f,d:pdt(f.dt),r:pdt(f.at)})).sort((a,b)=>a.d-b.d)}
 function place(){
  const n=T.f.length;
  document.querySelectorAll('#stk .sc').forEach((c,i)=>{const p=(i-sk+n)%n,q=Math.min(p,2);c.style.zIndex=n-p;c.style.transform=`translateY(${q*11}px) scale(${1-q*.05})`;c.style.opacity=p>2?0:1-p*.18;c.style.pointerEvents=p?'none':'auto'});
@@ -472,18 +496,18 @@ function tick(){
 }
 setInterval(tick,1000);
 function drawHero(){
- const L=legs(),out=L.filter(f=>!f.dir),a=out[0]||L[0],z=out[out.length-1]||L[0];
+ const L=legs(),core=L.filter(f=>!f.conn),a=L[0],z=core[0]||L[0];     // from the first flight to the first non-connection destination
  $('#route').innerHTML=`<div class="ep"><div class="rc">${a.from}</div><div class="rcity">${CITY[a.from]||''}</div></div><div class="arc"><i class="ln"></i><i class="pt l"></i><i class="pt r"></i><div class="pl" role="button" tabindex="0" aria-label="Edit trip">${PL(90)}</div></div><div class="ep"><div class="rc">${z.to}</div><div class="rcity">${CITY[z.to]||''}</div></div>`;
  const mf=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
  const fa=L[0].d,la=L[L.length-1].d;$('#dr').textContent=mf(fa)+' – '+mf(la)+' · '+(Math.round((la-fa)/864e5)+1)+' days';
- const[hh,mm]=L[0].dep.split(':').map(Number),f0=L[0].d;
- CD={tgt:new Date(f0.getFullYear(),f0.getMonth(),f0.getDate(),hh,mm),s:pd(T.start),e:pd(T.end)};tick();
+ const day0=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+ CD={tgt:L[0].d,s:day0(fa),e:day0(la)};tick();
  const al=f=>esc(f.al==='Select'?'':airL(f.al));
  if(L.length>2){
   sk=Math.min(sk,L.length-1);
-  $('#fl').innerHTML=`<div class="stk" id="stk">${L.map(f=>`<div class="sc"><div class="fi">${PL(45)}</div><div class="sr"><b>${f.from}–${f.to}</b><span>${al(f)} ${esc(f.code)}</span></div><div class="t">${md(f.d)} ${f.dep}<br>${md(f.r)} ${f.arr}</div></div>`).join('')}</div>`;
+  $('#fl').innerHTML=`<div class="stk" id="stk">${L.map(f=>`<div class="sc"><div class="fi">${PL(45)}</div><div class="sr"><b>${f.from}–${f.to}</b><span>${al(f)} ${esc(f.code)}</span></div><div class="t">${md(f.d)} ${f.dt.slice(11,16)}<br>${md(f.r)} ${f.at.slice(11,16)}</div></div>`).join('')}</div>`;
   place();
- }else $('#fl').innerHTML=L.map(f=>`<div class="fr"><div class="fi">${PL(f.dir?-135:45)}</div><div class="sr"><b>${f.from}–${f.to}</b><span>${al(f)} ${esc(f.code)}</span></div><div class="t">${md(f.d)} ${f.dep}<br>${md(f.r)} ${f.arr}</div></div>`).join('');
+ }else $('#fl').innerHTML=L.map((f,i)=>`<div class="fr"><div class="fi">${PL(i?-135:45)}</div><div class="sr"><b>${f.from}–${f.to}</b><span>${al(f)} ${esc(f.code)}</span></div><div class="t">${md(f.d)} ${f.dt.slice(11,16)}<br>${md(f.r)} ${f.at.slice(11,16)}</div></div>`).join('');
 }
 
 /* ---------- Settings modal ---------- */
@@ -493,46 +517,56 @@ const close=()=>$('#ov').classList.remove('on');
 $('#ov').onclick=e=>{if(e.target.id==='ov')close()};
 let tab=0,draft;
 const fd=v=>{if(!v)return '—';const[y,m,d]=v.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})};
-const dtf=(id,type,v)=>`<label class="in dt"><span>${type==='date'?fd(v):v}</span><input type="${type}" id="${id}" value="${v}"></label>`;
+const fdt=v=>{const d=pdt(v);return isNaN(d)?'—':d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '+pad(d.getHours())+':'+pad(d.getMinutes())};
+const dtf=(id,type,v)=>`<label class="in dt"><span>${type==='date'?fd(v):type==='datetime-local'?fdt(v):v}</span><input type="${type}" id="${id}" value="${v}"></label>`;
+const arrDay=(a,b)=>{const x=pdt(a),y=pdt(b);if(isNaN(x)||isNaN(y))return '—';const n=Math.round((new Date(y.getFullYear(),y.getMonth(),y.getDate())-new Date(x.getFullYear(),x.getMonth(),x.getDate()))/864e5);return n===0?'Same day':n>0?'+'+n+(n===1?' day':' days'):'−'+(-n)+(n===-1?' day':' days')};
 function tripForm(){
  const f=draft.f[tab],x=draft.f.length>1;
  const tabs=draft.f.map((l,i)=>`<button class="${i===tab?'on':''}" data-t="${i}">${draft.f.length===2?['Departure','Return'][i]:'Flight '+(i+1)}</button>`).join('');
  open(`<div class="lb" style="margin-top:0">Destination</div><input class="in" id="d_dest" value="${esc(draft.dest)}">
- <div class="g2"><div><div class="lb">Start</div>${dtf('d_s','date',draft.start)}</div><div><div class="lb">End</div>${dtf('d_e','date',draft.end)}</div></div>
  <div class="seg">${tabs}</div>
  <div class="panel"><div class="g2">
  <div><div class="lb">Airline</div><input class="in" id="f_al" list="airlines" value="${esc(f.al==='Select'?'':f.al)}" placeholder="Search or type" autocomplete="off"></div><div><div class="lb">Code</div><input class="in" id="f_code" value="${esc(f.code)}"></div>
  <div><div class="lb">From</div><input class="in" id="f_from" list="airports" value="${esc(apLabel(f.from))}" placeholder="Search airport" autocomplete="off" autocapitalize="characters"></div><div><div class="lb">To</div><input class="in" id="f_to" list="airports" value="${esc(apLabel(f.to))}" placeholder="Search airport" autocomplete="off" autocapitalize="characters"></div>
- <div><div class="lb">Depart</div>${dtf('f_dep','time',f.dep)}</div><div><div class="lb">Arrive</div>${dtf('f_arr','time',f.arr)}</div>
-
- <div style="grid-column:1/-1"><div class="lb">Arrival day</div>${sel('f_p',['Same day','+1 day'],f.p?'+1 day':'Same day')}</div></div></div>
- <div class="tiles" style="--n:${x?3:2}"><button class="tile" id="d_add"><i>${ic('plus')}</i><span>Add trip</span></button><button class="tile pri" id="d_save"><i>${ic('check')}</i><span>Save trip</span></button>${x?'<button class="tile dng" id="d_rm"><i>'+ic('trash')+'</i><span>Remove flight</span></button>':''}</div>`);
+ <div><div class="lb">Depart</div>${dtf('f_dt','datetime-local',f.dt)}</div><div><div class="lb">Arrive</div>${dtf('f_at','datetime-local',f.at)}</div>
+ <div><div class="lb">Arrival day</div><div class="in ro" id="f_ad">${arrDay(f.dt,f.at)}</div></div><div><div class="lb" style="visibility:hidden">.</div><button type="button" class="tg${f.conn?' on':''}" id="f_conn" aria-pressed="${!!f.conn}"><i class="ring">${ic('check',13)}</i><span>Transfer</span></button></div></div></div>
+ <div class="tiles" style="--n:${x?3:2}">${x?'<button class="tile dng" id="d_rm"><i>'+ic('trash')+'</i><span>Delete</span></button>':''}<button class="tile" id="d_add"><i>${ic('plus')}</i><span>Add</span></button><button class="tile pri" id="d_save"><i>${ic('check')}</i><span>Save</span></button></div>`);
 }
 function grab(){
  const f=draft.f[tab];
- draft.dest=$('#d_dest').value.trim()||'New Destination';draft.start=$('#d_s').value||draft.start;draft.end=$('#d_e').value||draft.end;
- f.al=$('#f_al').value;f.code=$('#f_code').value.trim();f.from=apCode($('#f_from').value)||f.from;f.to=apCode($('#f_to').value)||f.to;f.dep=$('#f_dep').value||f.dep;f.arr=$('#f_arr').value||f.arr;f.p=$('#f_p').value==='+1 day'?1:0;
+ draft.dest=$('#d_dest').value.trim()||'New Destination';
+ f.al=$('#f_al').value;f.code=$('#f_code').value.trim();f.from=apCode($('#f_from').value)||f.from;f.to=apCode($('#f_to').value)||f.to;
+ f.dt=$('#f_dt').value||f.dt;f.at=$('#f_at').value||f.at;f.conn=$('#f_conn').classList.contains('on');
 }
-const hm=t=>{const[h,m]=String(t||'00:00').split(':').map(Number);return h*60+m};
-const hmStr=m=>pad(Math.floor(m/60))+':'+pad(m%60);
-const legKey=f=>ad(pd(f.dir?draft.end:draft.start),+f.o||0).getTime()+hm(f.dep)*60000;
+const legKey=f=>pdt(f.dt).getTime();
 function sortDraft(keep){const k=keep||draft.f[tab];draft.f.sort((a,b)=>legKey(a)-legKey(b));tab=Math.max(0,draft.f.indexOf(k))}   // tabs always follow the clock
+const hasContent=d=>!!d&&!!(d.items.length||d.img||d.note||d.area);
 $('#sheet').onclick=e=>{
+ const cn=e.target.closest('#f_conn');
+ if(cn){cn.classList.toggle('on');cn.setAttribute('aria-pressed',cn.classList.contains('on'));return}
  const t=e.target.closest('[data-t]');
  if(t){const target=draft.f[+t.dataset.t];grab();sortDraft(target);tripForm();return}
- if(e.target.closest('#d_add')){                       // a new flight starts after the one you are looking at (a connection); change its times and it moves into place
+ if(e.target.closest('#d_add')){                       // a new flight starts after the one you are looking at (a connection); change its date and time and it moves into place
   grab();sortDraft();
-  const p=draft.f[tab];let a=hm(p.arr)+120,o=(+p.o||0)+(+p.p||0);if(a>=1440){a-=1440;o++}
-  let b=a+120,pp=0;if(b>=1440){b-=1440;pp=1}
-  const nl={al:p.al,code:'',from:p.to,to:p.from,dep:hmStr(a),arr:hmStr(b),p:pp,dir:p.dir,o};
+  const p=draft.f[tab],d=new Date(pdt(p.at).getTime()+120*60000),a=new Date(d.getTime()+120*60000);
+  const nl={al:p.al,code:'',from:p.to,to:p.from,dt:isoDT(d),at:isoDT(a),conn:true};
   draft.f.push(nl);sortDraft(nl);tripForm();return}
  const rm=e.target.closest('#d_rm');
  if(rm){if(!rm.dataset.c){rm.dataset.c=1;rm.classList.add('arm');rm.querySelector('span').textContent='Tap again';return}grab();draft.f.splice(tab,1);tab=Math.min(tab,draft.f.length-1);T.f=JSON.parse(JSON.stringify(draft.f));drawHero();tripForm();return}
- if(e.target.closest('#d_save')){grab();if(pd(draft.end)<pd(draft.start))draft.end=draft.start;sortDraft();Object.assign(T,draft);close();drawHero();relabel();drawPlan()}
+ if(e.target.closest('#d_save')){
+  grab();sortDraft();
+  // the itinerary follows the flights that are not connections; keep each day's content on its own date
+  const old=pd(T.start),all=draft.f.map(f=>({...f,d:pdt(f.dt)})).sort((a,b)=>a.d-b.d),core=all.filter(f=>!f.conn),b=core.length?core:all;
+  const ns=pd(iso(b[0].d)),ne=pd(iso(b[b.length-1].d)),k=Math.round((ns-old)/864e5),n=Math.round((ne-ns)/864e5)+1;
+  const next=k<0?[...Array(-k).fill(0).map(()=>blank()),...days]:days.slice(k),lost=[...days.slice(0,Math.max(0,k)),...next.slice(n)];
+  if(lost.some(hasContent)&&!confirm(L('This change shortens the itinerary and removes days that already have content. Continue?')))return;
+  days.splice(0,days.length,...next);
+  Object.assign(T,draft);recalcRange();close();drawHero();relabel();drawPlan();
+ }
 };
 $('#sheet').addEventListener('change',e=>{
  const t=e.target;
- if(t.closest('.dt'))t.previousElementSibling.textContent=t.type==='date'?fd(t.value):t.value;
+ if(t.closest('.dt')){t.previousElementSibling.textContent=t.type==='date'?fd(t.value):t.type==='datetime-local'?fdt(t.value):t.value;if((t.id==='f_dt'||t.id==='f_at')&&$('#f_ad'))$('#f_ad').textContent=arrDay($('#f_dt').value,$('#f_at').value)}
  else if(t.type==='file'){const l=t.closest('.pk');if(l)l.firstChild.nodeValue=t.files[0]?'Photo ready':l.dataset.l}
 });
 const editTrip=()=>{draft=JSON.parse(JSON.stringify(T));tab=0;sortDraft();tab=0;tripForm()};
@@ -723,7 +757,7 @@ window.__app={
  get:k=>k.startsWith('img_')?IMGC[k]:k==='trip'?T:/^day\d+$/.test(k)?days[+k.slice(3)]:STATE()[k],
  apply(v){
   const done=[];
-  if(v.trip){Object.assign(T,v.trip);done.push('trip')}
+  if(v.trip){Object.assign(T,v.trip);migrateTrip(T);recalcRange();done.push('trip')}
   const st=STATE();
   for(const k of Object.keys(st))if(v[k]){
    if(k==='notes'&&document.activeElement&&document.activeElement.closest('#notes')){pendN=v[k];pendBase=JSON.stringify(notes);continue}
@@ -732,7 +766,7 @@ window.__app={
   relabel();
   for(const k of Object.keys(v)){const m=k.match(/^day(\d+)$/);if(m){const i=+m[1];while(days.length<=i)days.push(blank());days[i]=Object.assign(blank(),v[k]);done.push(k)}}
   redraw();return done},
- template:()=>{const t0=new Date();t0.setDate(t0.getDate()+30);return{trip:{dest:'My Trip',start:iso(t0),end:iso(ad(t0,6)),f:[{al:'',code:'',from:'TPE',to:'NRT',dep:'09:00',arr:'13:00',p:0,dir:0,o:0},{al:'',code:'',from:'NRT',to:'TPE',dep:'15:00',arr:'18:00',p:0,dir:1,o:0}]},ideas:[],stays:[],resv:[],checks:[],notes:['']}},
+ template:()=>{const t0=new Date();t0.setDate(t0.getDate()+30);const t1=ad(t0,6);return{trip:{dest:'My Trip',start:iso(t0),end:iso(t1),f:[{al:'',code:'',from:'TPE',to:'NRT',dt:iso(t0)+'T09:00',at:iso(t0)+'T13:00',conn:false},{al:'',code:'',from:'NRT',to:'TPE',dt:iso(t1)+'T15:00',at:iso(t1)+'T18:00',conn:false}]},ideas:[],stays:[],resv:[],checks:[],notes:['']}},
  status:()=>drawStatus()
 };
 function drawStatus(){
@@ -920,13 +954,16 @@ document.fonts&&document.fonts.ready.then(growAll);
 /* ---------- Language (English / 繁體中文) ---------- */
 const MON={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12},WK={Sun:'日',Mon:'一',Tue:'二',Wed:'三',Thu:'四',Fri:'五',Sat:'六'};
 const MR='(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)',WR='(Sun|Mon|Tue|Wed|Thu|Fri|Sat)';
-const ZH={"Checklist":"待辦清單","Checklist and notes":"待辦與筆記","Done":"完成","Drag to reorder":"拖曳排序","Edit trip":"編輯旅程","Itinerary":"行程","New checklist item":"新增待辦事項","Note options":"筆記選項","Overview":"總覽","Settings":"設定","Add an item…":"新增項目…","Area, hours…":"地區、營業時間…","e.g. 2/9":"例如 2/9","e.g. Sat 2/6 – Sun 2/7":"例如 週六 2/6 – 週日 2/7","e.g. Visit the museum":"例如 參觀博物館","Hotel or rental":"飯店或民宿","Place or activity":"地點或活動","Places nearby":"附近的地點","Reminders for the day":"當天的提醒","Restaurant, hotel, ticket…":"餐廳、飯店、票券…","Search or type":"搜尋或輸入","Time, party size, booking code":"時間、人數、訂位代號","Where are you today?":"今天在哪裡?","Write a note…":"寫點筆記…","Your name":"你的名字","+ Add":"+ 新增","+ Add stop":"+ 新增行程","+1 day":"+1 天","Accommodation":"住宿","Account":"帳號","Add":"新增","Add photo":"新增照片","Add to schedule":"加入行程","Add trip":"新增航班","Airline":"航空公司","AM":"上午","Area":"地區","Arrival day":"抵達日","Arrive":"抵達","Can edit":"可編輯","Check-in":"入住","Check-out":"退房","Code":"航班號","Confirm":"確認","Date":"日期","Dates":"日期","days":"天","Delete":"刪除","Delete idea":"刪除想法","Delete this note":"刪除這則筆記","Depart":"出發","Departs":"出發日","Departure":"去程","Destination":"目的地","Details":"詳細資訊","Direction":"方向","Double-tap a day's banner to edit the day. Tap a stop to edit it.":"連點兩下當天的橫幅可編輯當天內容,點行程項目可編輯該項目。","Double-tap to add details":"連點兩下新增內容","Edit idea":"編輯想法","Edit reservation":"編輯預約","Edit stay":"編輯住宿","Edit stop":"編輯行程項目","End":"結束","Food":"美食","From":"出發地","hrs":"時","Idea":"想法","Ideas":"想法","Join trip":"加入旅程","Language":"語言","Leave trip":"離開旅程","min":"分","Name":"名稱","Nearby":"周邊","New idea":"新增想法","New reservation":"新增預約","New stay":"新增住宿","Night":"晚上","Note":"備註","Notes":"筆記","Open in Google Maps":"在 Google 地圖開啟","Opening your trip…":"正在開啟你的旅程…","Other":"其他","Owner":"擁有者","People":"成員","Photo":"照片","Photo or GIF":"照片或 GIF","Pin places you might want to go. Tap a card to edit.":"先收藏想去的地方,之後再決定。點卡片可編輯。","Please enter your name.":"請輸入你的名字。","Please rotate your phone to portrait.":"請將手機轉回直式。","PM":"下午","Remove":"移除","Remove flight":"移除航班","Reservations":"預約","Return":"回程","Revoke":"撤銷","Same day":"當天","Save":"儲存","Save trip":"儲存旅程","Saved on this device only.":"資料只存在這台裝置上。","Sign in to back up and share this trip.":"登入後即可備份並分享這趟旅程。","Add your Firebase settings to turn on sync (see README).":"填入 Firebase 設定即可開啟同步(請見 README)。","Schedule on":"排入日期","sec":"秒","Shop":"購物","Sight":"景點","Sign in":"登入","Sign in with Google":"使用 Google 登入","Sign out":"登出","Start":"開始","Swipe left to delete · drag the handle to reorder.":"向左滑動刪除 · 拖曳把手排序。","Sync is still loading…":"同步功能載入中…","Tap again":"再點一次","Time of day":"時段","To":"抵達地","Trip Planner":"旅行規劃","Type":"類型","View only":"僅檢視","What":"內容","Joining…":"加入中…","Still opening… check your connection, then reload.":"仍在開啟中…請檢查網路連線後重新整理。","Cloud sync is unavailable right now. Check your connection.":"目前無法使用雲端同步,請檢查網路連線。","Could not load.":"無法載入。","Loading…":"載入中…","No stays yet. Add a hotel or rental.":"還沒有住宿,新增飯店或民宿吧。","No reservations yet. Add a table, hotel or ticket.":"還沒有預約,新增餐廳、飯店或票券吧。","Add what to pack or book before you leave.":"新增出發前要準備或預訂的事項。","Nothing to pack or do yet":"還沒有待辦事項","Nothing planned yet. Add your first stop below.":"還沒有安排,從下方新增第一個行程吧。","Trip complete":"旅程結束","Photo ready":"照片已選好","Replace photo":"更換照片","Replace photo or GIF":"更換照片或 GIF","Remove banner photo":"移除橫幅照片","Remove photo":"移除照片","This GIF is over 3 MB. Please use a smaller one, for example by shrinking it at ezgif.com.":"這個 GIF 超過 3 MB,請換小一點的檔案,例如到 ezgif.com 壓縮。","This image could not be read. Try a JPEG or PNG.":"無法讀取這張圖片,請改用 JPEG 或 PNG。","Taipei":"台北","Seoul":"首爾","Boston":"波士頓","Tokyo":"東京","Osaka":"大阪","Los Angeles":"洛杉磯","New York":"紐約","San Francisco":"舊金山","London":"倫敦","Bangkok":"曼谷","Chicago":"芝加哥","Salzburg":"薩爾茲堡","or join with a link":"或用連結加入","Paste the link":"貼上連結","Paste the link you were sent.":"請貼上你收到的連結。","You're invited! Enter your name to join this trip.":"你受邀加入這趟旅程!請輸入你的名字。","This trip is private. Sign in, or join with the link you were sent.":"這是私人旅程。請登入,或使用收到的連結加入。","An installed app keeps its own login. Sign in here, or enter your name and paste the link you were sent.":"安裝到主畫面的 app 有獨立的登入狀態。請在這裡登入,或輸入你的名字並貼上收到的連結。","This link is invalid or has been reset.":"這個連結無效或已被重設。","Share link":"分享連結","Guest":"訪客","Copied":"已複製","Copy this link":"請複製這個連結","My trips":"我的旅程","New trip":"新增旅程","Creating…":"建立中…","Deleting…":"刪除中…","Current":"目前","Past":"已結束","Untitled trip":"未命名旅程","No trips yet.":"還沒有旅程。","Delete trip":"刪除旅程","Delete this trip and all of its data? This cannot be undone.":"要刪除這趟旅程和它所有的資料嗎?此動作無法復原。","You can keep up to 20 trips.":"最多可以保留 20 趟旅程。","This trip is no longer available.":"這趟旅程已經不存在了。","Trip name":"旅程名稱","+ New":"+ 新增","Switch to this trip":"切換到這趟旅程","Rename":"重新命名","Search airport":"搜尋機場"};
+const ZH={"Checklist":"待辦清單","Checklist and notes":"待辦與筆記","Done":"完成","Drag to reorder":"拖曳排序","Edit trip":"編輯旅程","Itinerary":"行程","New checklist item":"新增待辦事項","Note options":"筆記選項","Overview":"總覽","Settings":"設定","Add an item…":"新增項目…","Area, hours…":"地區、營業時間…","e.g. 2/9":"例如 2/9","e.g. Sat 2/6 – Sun 2/7":"例如 週六 2/6 – 週日 2/7","e.g. Visit the museum":"例如 參觀博物館","Hotel or rental":"飯店或民宿","Place or activity":"地點或活動","Places nearby":"附近的地點","Reminders for the day":"當天的提醒","Restaurant, hotel, ticket…":"餐廳、飯店、票券…","Search or type":"搜尋或輸入","Time, party size, booking code":"時間、人數、訂位代號","Where are you today?":"今天在哪裡?","Write a note…":"寫點筆記…","Your name":"你的名字","+ Add":"+ 新增","+ Add stop":"+ 新增行程","+1 day":"+1 天","Accommodation":"住宿","Account":"帳號","Add":"新增","Add photo":"新增照片","Add to schedule":"加入行程","Add trip":"新增航班","Airline":"航空公司","AM":"上午","Area":"地區","Arrival day":"抵達日","Arrive":"抵達","Can edit":"可編輯","Check-in":"入住","Check-out":"退房","Code":"航班號","Confirm":"確認","Date":"日期","Dates":"日期","days":"天","Delete":"刪除","Delete idea":"刪除想法","Delete this note":"刪除這則筆記","Depart":"出發","Departs":"出發日","Departure":"去程","Destination":"目的地","Details":"詳細資訊","Direction":"方向","Double-tap a day's banner to edit the day. Tap a stop to edit it.":"連點兩下當天的橫幅可編輯當天內容,點行程項目可編輯該項目。","Double-tap to add details":"連點兩下新增內容","Edit idea":"編輯想法","Edit reservation":"編輯預約","Edit stay":"編輯住宿","Edit stop":"編輯行程項目","End":"結束","Food":"美食","From":"出發地","hrs":"時","Idea":"想法","Ideas":"想法","Join trip":"加入旅程","Language":"語言","Leave trip":"離開旅程","min":"分","Name":"名稱","Nearby":"周邊","New idea":"新增想法","New reservation":"新增預約","New stay":"新增住宿","Night":"晚上","Note":"備註","Notes":"筆記","Open in Google Maps":"在 Google 地圖開啟","Opening your trip…":"正在開啟你的旅程…","Other":"其他","Owner":"擁有者","People":"成員","Photo":"照片","Photo or GIF":"照片或 GIF","Pin places you might want to go. Tap a card to edit.":"先收藏想去的地方,之後再決定。點卡片可編輯。","Please enter your name.":"請輸入你的名字。","Please rotate your phone to portrait.":"請將手機轉回直式。","PM":"下午","Remove":"移除","Remove flight":"移除航班","Reservations":"預約","Return":"回程","Revoke":"撤銷","Same day":"當天","Save":"儲存","Save trip":"儲存旅程","Saved on this device only.":"資料只存在這台裝置上。","Sign in to back up and share this trip.":"登入後即可備份並分享這趟旅程。","Add your Firebase settings to turn on sync (see README).":"填入 Firebase 設定即可開啟同步(請見 README)。","Schedule on":"排入日期","sec":"秒","Shop":"購物","Sight":"景點","Sign in":"登入","Sign in with Google":"使用 Google 登入","Sign out":"登出","Start":"開始","Swipe left to delete · drag the handle to reorder.":"向左滑動刪除 · 拖曳把手排序。","Sync is still loading…":"同步功能載入中…","Tap again":"再點一次","Time of day":"時段","To":"抵達地","Trip Planner":"旅行規劃","Type":"類型","View only":"僅檢視","What":"內容","Joining…":"加入中…","Still opening… check your connection, then reload.":"仍在開啟中…請檢查網路連線後重新整理。","Cloud sync is unavailable right now. Check your connection.":"目前無法使用雲端同步,請檢查網路連線。","Could not load.":"無法載入。","Loading…":"載入中…","No stays yet. Add a hotel or rental.":"還沒有住宿,新增飯店或民宿吧。","No reservations yet. Add a table, hotel or ticket.":"還沒有預約,新增餐廳、飯店或票券吧。","Add what to pack or book before you leave.":"新增出發前要準備或預訂的事項。","Nothing to pack or do yet":"還沒有待辦事項","Nothing planned yet. Add your first stop below.":"還沒有安排,從下方新增第一個行程吧。","Trip complete":"旅程結束","Photo ready":"照片已選好","Replace photo":"更換照片","Replace photo or GIF":"更換照片或 GIF","Remove banner photo":"移除橫幅照片","Remove photo":"移除照片","This GIF is over 3 MB. Please use a smaller one, for example by shrinking it at ezgif.com.":"這個 GIF 超過 3 MB,請換小一點的檔案,例如到 ezgif.com 壓縮。","This image could not be read. Try a JPEG or PNG.":"無法讀取這張圖片,請改用 JPEG 或 PNG。","Taipei":"台北","Seoul":"首爾","Boston":"波士頓","Tokyo":"東京","Osaka":"大阪","Los Angeles":"洛杉磯","New York":"紐約","San Francisco":"舊金山","London":"倫敦","Bangkok":"曼谷","Chicago":"芝加哥","Salzburg":"薩爾茲堡","or join with a link":"或用連結加入","Paste the link":"貼上連結","Paste the link you were sent.":"請貼上你收到的連結。","You're invited! Enter your name to join this trip.":"你受邀加入這趟旅程!請輸入你的名字。","This trip is private. Sign in, or join with the link you were sent.":"這是私人旅程。請登入,或使用收到的連結加入。","An installed app keeps its own login. Sign in here, or enter your name and paste the link you were sent.":"安裝到主畫面的 app 有獨立的登入狀態。請在這裡登入,或輸入你的名字並貼上收到的連結。","This link is invalid or has been reset.":"這個連結無效或已被重設。","Share link":"分享連結","Guest":"訪客","Copied":"已複製","Copy this link":"請複製這個連結","My trips":"我的旅程","New trip":"新增旅程","Creating…":"建立中…","Deleting…":"刪除中…","Current":"目前","Past":"已結束","Untitled trip":"未命名旅程","No trips yet.":"還沒有旅程。","Delete trip":"刪除旅程","Delete this trip and all of its data? This cannot be undone.":"要刪除這趟旅程和它所有的資料嗎?此動作無法復原。","You can keep up to 20 trips.":"最多可以保留 20 趟旅程。","This trip is no longer available.":"這趟旅程已經不存在了。","Trip name":"旅程名稱","+ New":"+ 新增","Switch to this trip":"切換到這趟旅程","Rename":"重新命名","Search airport":"搜尋機場","Connection":"轉機","Connection flight":"轉機航班","This change shortens the itinerary and removes days that already have content. Continue?":"這項變更會縮短行程,並刪除已經有內容的天數。要繼續嗎?","Transfer":"轉機"};
 AP.forEach(a=>{if(a[2])ZH[a[1]]=a[2]});
 const ZHR=[
  [new RegExp('^'+MR+' (\\d+), (\\d{4})$'),(_,m,d,y)=>`${y}年${MON[m]}月${d}日`],
  [new RegExp('^'+MR+' (\\d+) – '+MR+' (\\d+) · (\\d+) days$'),(_,a,b,c,d,n)=>`${MON[a]}月${b}日 – ${MON[c]}月${d}日 · ${n} 天`],
  [new RegExp('^'+MR+' (\\d+) – '+MR+' (\\d+), (\\d{4})$'),(_,a,b,c,d,y)=>`${y}年${MON[a]}月${b}日 – ${MON[c]}月${d}日`],
  [new RegExp('^'+MR+' (\\d+), (\\d{4}) – '+MR+' (\\d+), (\\d{4})$'),(_,a,b,y1,c,d,y2)=>`${y1}年${MON[a]}月${b}日 – ${y2}年${MON[c]}月${d}日`],
+ [new RegExp('^'+MR+' (\\d+) · (\\d\\d:\\d\\d)$'),(_,m,d,t)=>`${MON[m]}月${d}日 · ${t}`],
+ [/^\+(\d+) days$/,(_,n)=>`+${n} 天`],
+ [/^−(\d+) days?$/,(_,n)=>`−${n} 天`],
  [new RegExp('^'+MR+' (\\d+)$'),(_,m,d)=>`${MON[m]}月${d}日`],
  [new RegExp('^(\\d+)/(\\d+) '+WR+'$'),(_,a,b,w)=>`${a}/${b} 週${WK[w]}`],
  [new RegExp('^Day (\\d+) · (\\d+)/(\\d+) '+WR+'$'),(_,n,a,b,w)=>`Day ${n} · ${a}/${b} 週${WK[w]}`],
