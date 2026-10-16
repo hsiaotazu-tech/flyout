@@ -868,15 +868,15 @@ const resv=[];
 const rvISO=v=>{v=String(v||'');if(/^\d{4}-\d\d-\d\d(T\d\d:\d\d)?$/.test(v))return v.slice(0,10);const m=v.match(/^(\d{1,2})\/(\d{1,2})$/);if(!m)return '';const s0=pd(T.start),y=(isNaN(s0)?new Date():s0).getFullYear();let d=new Date(y,m[1]-1,+m[2]);if(!isNaN(s0)&&d<s0)d=new Date(y+1,m[1]-1,+m[2]);return iso(d)};
 const rvLab=v=>/^\d{4}-\d\d-\d\d/.test(String(v||''))?md(pd(String(v).slice(0,10))):(v||'');
 const rvTime=v=>{const m=String(v||'').match(/T(\d\d:\d\d)$/);return m?m[1]:''};
-function drawResv(){$('#resv').innerHTML=resv.length?resv.map((r,i)=>`<div class="sw" data-i="${i}"><div class="tdel">${ic('trash',20)}</div><div class="card rv" data-i="${i}"><div class="rd">${esc(rvLab(r.d))}</div><div><b>${esc(r.t)}</b><div class="sub">${esc([rvTime(r.d),r.s].filter(Boolean).join(' · '))}</div></div></div></div>`).join(''):'<p class="empty">No reservations yet. Add a table, hotel or ticket.</p>'}
+function drawResv(){$('#resv').innerHTML=resv.length?resv.map((r,i)=>`<div class="sw" data-i="${i}"><div class="tdel">${ic('trash',20)}</div><div class="card rv" data-i="${i}"><div class="rd">${esc(rvLab(r.d))}</div><div>${(t=>t?`<div class="sub" style="margin-bottom:2px">${esc(t)}</div>`:'')([rvTime(r.d),r.s].filter(Boolean).join(' · '))}<b>${esc(r.t)}</b></div></div></div>`).join(''):'<p class="empty">No reservations yet. Add a table, hotel or ticket.</p>'}
 function rvSheet(i){            // name / date+time with Save / details; tapping outside also saves; swiping the card left deletes
  const isNew=i==null,x=isNew?{d:T.start,t:'',s:''}:resv[i],dv=rvISO(x.d)||(isNew?T.start:''),hasT=!!rvTime(x.d),syn=dv?dv+'T12:00':'';
  open(`<div class="serif" style="font-size:21px;text-align:center;font-weight:700">${isNew?'New reservation':'Edit reservation'}</div><div><div class="lb">Name</div><input class="in" id="r_t" value="${esc(x.t)}" placeholder="Restaurant, hotel, ticket…" autocomplete="off"></div><div class="rvrow"><div><div class="lb">Date &amp; Time</div>${pf('r_d','dt',hasT?x.d:syn)}</div><button type="button" class="tile pri" id="sv" aria-label="Save"><i>${ic('check')}</i><span>Save</span></button></div>`);
  $('#sheet').classList.add('uni');
- if(!hasT)$('#r_d').textContent=dv?shortD(dv):'—';     // an old date-only reservation shows just the date until a time is picked
+ if(!hasT&&!isNew)$('#r_d').textContent=dv?shortD(dv):'—';     // an old date-only reservation shows just the date until a time is picked
  onClose=()=>{
   const t=$('#r_t').value.trim();if(!t)return;
-  const v=$('#r_d').dataset.v,o={d:(!hasT&&v===syn)?dv:(v||'—'),t,s:x.s||''};
+  const v=$('#r_d').dataset.v,o={d:(!isNew&&!hasT&&v===syn)?dv:(v||'—'),t,s:x.s||''};
   if(isNew)resv.push(o);else resv[i]=o;drawResv();
  };
  $('#sv').onclick=()=>{if(!$('#r_t').value.trim()){$('#r_t').focus();return}close()};
